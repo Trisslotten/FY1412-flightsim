@@ -6,8 +6,8 @@
 
 void Vectors::init()
 {
-	body.load("assets/vectorbody.obj");
-	head.load("assets/vectorhead.obj");
+	body.load("vectorbody.obj");
+	head.load("vectorhead.obj");
 
 	body.uploadToGPU();
 	head.uploadToGPU();

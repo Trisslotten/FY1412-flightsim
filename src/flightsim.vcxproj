@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AB7F6721-EE2A-4692-A271-D13F789D1859}</ProjectGuid>
-    <RootNamespace>PBRAssimp</RootNamespace>
+    <RootNamespace>flightsim</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
     <ProjectName>flightsim</ProjectName>
   </PropertyGroup>
@@ -152,7 +152,6 @@
     <ClInclude Include="body.hpp" />
     <ClInclude Include="camera.hpp" />
     <ClInclude Include="engine.hpp" />
-    <ClInclude Include="entity.hpp" />
     <ClInclude Include="font.hpp" />
     <ClInclude Include="liftdata.hpp" />
     <ClInclude Include="lodepng.h" />
@@ -168,15 +167,15 @@
     <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\assets\inertia.frag" />
-    <None Include="..\assets\inertia.vert" />
-    <None Include="..\assets\shader.frag" />
-    <None Include="..\assets\shader.geom" />
-    <None Include="..\assets\shader.vert" />
-    <None Include="..\assets\skybox.frag" />
-    <None Include="..\assets\skybox.vert" />
-    <None Include="..\assets\text.frag" />
-    <None Include="..\assets\text.vert" />
+    <None Include="..\assets\shaders\inertia.frag" />
+    <None Include="..\assets\shaders\inertia.vert" />
+    <None Include="..\assets\shaders\shader.frag" />
+    <None Include="..\assets\shaders\shader.geom" />
+    <None Include="..\assets\shaders\shader.vert" />
+    <None Include="..\assets\shaders\skybox.frag" />
+    <None Include="..\assets\shaders\skybox.vert" />
+    <None Include="..\assets\shaders\text.frag" />
+    <None Include="..\assets\shaders\text.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

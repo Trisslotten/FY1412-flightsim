@@ -113,9 +113,6 @@
     <ClInclude Include="timer.hpp">
       <Filter>Source Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="entity.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="material.hpp">
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
@@ -136,31 +133,31 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\assets\shader.frag">
+    <None Include="..\assets\shaders\inertia.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\shader.geom">
+    <None Include="..\assets\shaders\inertia.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\shader.vert">
+    <None Include="..\assets\shaders\shader.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\inertia.frag">
+    <None Include="..\assets\shaders\shader.geom">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\skybox.vert">
+    <None Include="..\assets\shaders\shader.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\skybox.frag">
+    <None Include="..\assets\shaders\skybox.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\inertia.vert">
+    <None Include="..\assets\shaders\skybox.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\text.vert">
+    <None Include="..\assets\shaders\text.frag">
       <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="..\assets\text.frag">
+    <None Include="..\assets\shaders\text.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>

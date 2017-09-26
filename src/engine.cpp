@@ -21,7 +21,7 @@ void Engine::init()
 	vectors.init();
 	renderer.init(&window);
 
-	cloud.load("assets/cloud.obj");
+	cloud.load("cloud.obj");
 	cloud.uploadToGPU();
 }
 

@@ -4,15 +4,16 @@
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 
-GLuint compileShader(GLenum type, std::string name)
+GLuint compileShader(GLenum type, const std::string& name)
 {
-
 	GLuint shader = glCreateShader(type);
-	std::ifstream shaderFile(name);
+
+	std::string path = "assets/shaders/" + name;
+	std::ifstream shaderFile(path);
 	std::string shaderText((std::istreambuf_iterator<char>(shaderFile)), std::istreambuf_iterator<char>());
 	if (!shaderFile.is_open())
 	{
-		std::cout << "ERROR: Could not open file: " << name << "\n";
+		std::cout << "ERROR: Could not open file: " << path << "\n";
 		system("pause");
 		exit(1);
 	}

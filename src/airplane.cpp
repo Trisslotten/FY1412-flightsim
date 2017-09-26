@@ -16,8 +16,8 @@ void Airplane::genInertiaTensor()
 	glm::mat4 projection = glm::ortho(-length /2, length /2, -length /2, length /2, 1.f, length +1);
 	glm::mat4 view = glm::lookAt(glm::vec3(0, 0, -length /2-1), glm::vec3(0,0,0), glm::vec3(0, 1, 0));
 
-	shader.create("assets/inertia.vert",
-				  "assets/inertia.frag");
+	shader.create("inertia.vert",
+				  "inertia.frag");
 
 	shader.use();
 	shader.uniform("projection", projection);
@@ -161,8 +161,8 @@ void Airplane::init()
 	std::shared_ptr<Model> wing = std::make_shared<Model>();
 	std::shared_ptr<Model> fuselage = std::make_shared<Model>();
 
-	wing->load("assets/wing.obj");
-	fuselage->load("assets/cylinder.obj");
+	wing->load("wing.obj");
+	fuselage->load("cylinder.obj");
 	
 
 	wing->uploadToGPU();

@@ -96,8 +96,8 @@ void Renderer::createSkybox()
 void Renderer::init(Window* _window)
 {
 	window = _window;
-	shader.create("assets/shader.vert", "assets/shader.geom", "assets/shader.frag");
-	skybox_shader.create("assets/skybox.vert", "assets/skybox.frag");
+	shader.create("shader.vert", "shader.geom", "shader.frag");
+	skybox_shader.create("skybox.vert", "skybox.frag");
 	createSkybox();
 
 	glm::vec2 size = window->getWindowSize();

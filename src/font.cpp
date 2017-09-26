@@ -8,7 +8,7 @@ void Font::load(const std::string & path)
 {
 	font.load(path, TEXTURE_2D);
 
-	shader.create("assets/text.vert", "assets/text.frag");
+	shader.create("text.vert", "text.frag");
 
 	width_pixels = 128;
 	height_pixels = 256;

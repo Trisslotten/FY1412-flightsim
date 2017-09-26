@@ -83,8 +83,9 @@ Model::~Model()
 void Model::load(const std::string & file)
 {
 	Assimp::Importer importer;
-	
-	const aiScene* scene = importer.ReadFile(file, aiProcess_GenNormals |
+
+	const aiScene* scene = importer.ReadFile("assets/models/" + file, 
+											 aiProcess_GenNormals |
 											 aiProcess_Triangulate |
 											 aiProcess_JoinIdenticalVertices |
 											 aiProcess_SortByPType | 
