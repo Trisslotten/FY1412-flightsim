@@ -6,6 +6,7 @@
 #include "camera.hpp"
 #include "airplane.hpp"
 #include "vectors.hpp"
+#include "texts.hpp"
 
 class Engine
 {
@@ -14,6 +15,9 @@ class Engine
 	std::shared_ptr<Camera> camera;
 
 	Renderer renderer;
+
+	Vectors vectors;
+	Texts texts;
 
 	Airplane airplane;
 
@@ -24,7 +28,8 @@ class Engine
 	float frame_accum;
 	
 public:
-	Vectors vectors;
+	Texts& getTexts() { return texts; }
+	Vectors& getVectors() { return vectors; }
 
 	Engine() {}
 

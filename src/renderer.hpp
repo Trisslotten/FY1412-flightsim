@@ -21,6 +21,7 @@ public:
 
 class Renderer
 {
+	
 	std::shared_ptr<Camera> current_camera;
 	Window* window;
 
@@ -34,6 +35,13 @@ class Renderer
 
 	glm::mat4 projection;
 	glm::mat4 view;
+
+
+	friend class Texts;
+	// for texts to call
+	void drawText(float x, float y, const std::string& text);
+	void drawText(glm::vec3 world_pos, const std::string& text);
+
 
 	void createSkybox();
 public:
@@ -58,8 +66,6 @@ public:
 
 	void draw(Model& model, glm::mat4 world = glm::mat4());
 
-	void drawText(float x, float y, const std::string& text);
-	void drawText(glm::vec3 world_pos, const std::string& text);
 
 	void drawSkybox();
 };

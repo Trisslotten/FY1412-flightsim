@@ -74,11 +74,7 @@ void Engine::render()
 	renderer.draw(vectors);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
-
-
-	glm::vec3 v = airplane.body.velocityAt(airplane.body.position);
-	glm::vec3 pos = airplane.body.position + sqrt(length(v))*normalize(v);
-	renderer.drawText(pos, std::to_string((int)length(v)) + " m/s");
+	renderer.draw(texts);
 	
 	window.update();
 }

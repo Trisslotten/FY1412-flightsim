@@ -212,8 +212,14 @@ void Airplane::update(float dt, Engine& engine)
 	body.update(dt);
 
 
-	engine.vectors.addVector(body.position, body.forces, glm::vec3(0, 0, 1));
-	engine.vectors.addVector(body.position, body.velocityAt(body.position), glm::vec3(1, 0, 0));
+
+
+	glm::vec3 v = body.velocityAt(body.position);
+	glm::vec3 pos = body.position + sqrt(length(v))*normalize(v);
+	engine.getTexts().addText(pos, std::to_string((int)length(v)) + " m/s");
+
+	engine.getVectors().addVector(body.position, body.forces, glm::vec3(0, 0, 1));
+	engine.getVectors().addVector(body.position, body.velocityAt(body.position), glm::vec3(1, 0, 0));
 }
 
 
