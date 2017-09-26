@@ -63,6 +63,7 @@ void Airplane::genInertiaTensor()
 			glm::vec3 wp = pos;
 
 			// loop through all "cubes" behind till z = 0;
+			wp.z += 0.5f*pixel_size;
 			while(wp.z<0)
 			{
 				num_cubes += 2;
