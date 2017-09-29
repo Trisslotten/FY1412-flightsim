@@ -11,13 +11,15 @@ class Engine;
 struct Wing
 {
 	Wing(std::shared_ptr<Model> _model,
-			 glm::mat4 _transform)
+			 glm::mat4 _transform, float _Cl0 = 0)
 	{
 		model = _model;
 		transform = _transform;
+		Cl0 = _Cl0;
 	}
 	std::shared_ptr<Model> model;
 	glm::mat4 transform;
+	float Cl0;
 };
 
 struct Fuselage

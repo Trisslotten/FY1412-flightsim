@@ -17,6 +17,12 @@ void Texts::draw(Renderer & renderer)
 	for (auto&& t : to_draw3d)
 		renderer.drawText(t.first, t.second);
 
+}
+
+void Texts::clear()
+{
 	to_draw2d.clear();
 	to_draw3d.clear();
 }
+
+

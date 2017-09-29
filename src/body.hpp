@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -9,6 +10,9 @@ struct Body
 	// accumulated from applyForce()
 	glm::vec3 forces, torques;
 	glm::vec3 external_forces;
+
+	// Position and Force
+	std::vector<std::pair<glm::vec3, glm::vec3>> applied_forces;
 
 	// Primary
 	glm::vec3 position;

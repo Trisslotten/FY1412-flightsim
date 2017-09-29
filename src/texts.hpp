@@ -15,5 +15,7 @@ public:
 	void addText(float x, float y, const std::string& text);
 	void addText(glm::vec3, const std::string& text);
 
+	void clear();
+
 	virtual void draw(Renderer& renderer);
 };

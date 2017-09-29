@@ -27,7 +27,7 @@ void Engine::init()
 
 void Engine::update()
 {
-	double timescale = 1.0;
+	double timescale = 1;
 	double dt = timer.restart();
 	frame_accum += dt;
 	
@@ -35,6 +35,7 @@ void Engine::update()
 	while (frame_accum > frame_time)
 	{
 		vectors.clear();
+		texts.clear();
 		// update physics
 
 		glClearColor(0, 0, 0, 1);

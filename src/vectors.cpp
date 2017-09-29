@@ -39,7 +39,7 @@ void Vectors::draw(Renderer & renderer)
 		{
 			rotation = glm::rotate(angle, axis);
 		}
-		float len = sqrt(length(v.vector));
+		float len = 1;// log(length(v.vector));
 		glm::mat4 body_trans = translation*rotation*glm::scale(glm::vec3(1,len,1));
 		glm::mat4 head_trans = translation*rotation*glm::translate(glm::vec3(0, len, 0));
 		renderer.setColor(glm::vec4(v.color.r, v.color.g, v.color.b, 1));
