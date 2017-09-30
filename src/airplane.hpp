@@ -41,13 +41,15 @@ class Airplane : public Drawable
 	GLfloat* depth_map;
 	int area_resolution = 100;
 
+	double reference_area = 0;
+	glm::dvec3 drag_center;
 
 	std::vector<Fuselage> fuselage_parts;
 	std::vector<Wing> wings;
 
 	void genInertiaTensor();
 
-	double calcArea();
+	void calcArea();
 public:
 	Body body;
 

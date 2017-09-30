@@ -30,6 +30,7 @@ class Engine
 public:
 	Texts& getTexts() { return texts; }
 	Vectors& getVectors() { return vectors; }
+	Window& getWindow() { return window; }
 
 	Engine() {}
 
