@@ -4,52 +4,53 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+using namespace glm;
 
 struct Body
 {
 	// accumulated from applyForce()
-	glm::vec3 forces, torques;
-	glm::vec3 external_forces;
+	dvec3 forces, torques;
+	dvec3 external_forces;
 
 	// Position and Force
-	std::vector<std::pair<glm::vec3, glm::vec3>> applied_forces;
+	std::vector<std::pair<dvec3, dvec3>> applied_forces;
 
 	// Primary
-	glm::vec3 position;
-	glm::vec3 momentum;
+	dvec3 position;
+	dvec3 momentum;
 
-	glm::quat orientation;
-	glm::vec3 angular_momentum;
+	dquat orientation;
+	dvec3 angular_momentum;
 
 
 	// Calculated. These are only valid after deriving them from primary values
 
 	// Constants
-	float mass;
-	float inverse_mass;
+	double mass;
+	double inverse_mass;
 
 	// moment of ... (rotational)
-	glm::mat3 inertia;
-	glm::mat3 inverse_inertia;
+	dmat3 inertia;
+	dmat3 inverse_inertia;
 
-	void setMass(float _mass)
+	void setMass(double _mass)
 	{
 		mass = _mass;
 		inverse_mass = 1.f / mass;
 	}
-	void setInertia(glm::mat3 _inertia)
+	void setInertia(dmat3 _inertia)
 	{
 		inertia = _inertia;
-		inverse_inertia = glm::inverse(inertia);
+		inverse_inertia = inverse(inertia);
 	}
 
-	glm::mat4 getTransform();
+	dmat4 getTransform();
 
-	glm::vec3 velocityAt(glm::vec3 world_pos);
+	dvec3 velocityAt(dvec3 world_pos);
 
-	void applyForce(glm::vec3 force, glm::vec3 world_pos);
-	void applyImpuls(glm::vec3 impuls, glm::vec3 world_pos);
+	void applyForce(dvec3 force, dvec3 world_pos);
+	void applyImpuls(dvec3 impuls, dvec3 world_pos);
 
-	void update(float dt);
+	void update(double dt);
 
 };

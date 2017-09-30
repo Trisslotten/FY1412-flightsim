@@ -4,20 +4,23 @@
 #include <iostream>
 #include "engine.hpp"
 
+using namespace glm;
+
 
 // assume origo is in line
-glm::vec3 projectOnLine(glm::vec3 to_project, glm::vec3 v)
+dvec3 projectOnLine(dvec3 to_project, dvec3 v)
 {
 	v = normalize(v);
 	return dot(to_project, v)*v;
 }
 // assume origo is in plane 
-glm::vec3 projectToPlane(glm::vec3 to_project, glm::vec3 v1, glm::vec3 v2)
+dvec3 projectToPlane(dvec3 to_project, dvec3 v1, dvec3 v2)
 {
-	glm::vec3 normal = glm::normalize(cross(v1, v2));
-	glm::vec3 on_normal = projectOnLine(to_project, normal);
+	dvec3 normal = normalize(cross(v1, v2));
+	dvec3 on_normal = projectOnLine(to_project, normal);
 	return to_project - on_normal;
 }
+
 
 
 void Airplane::genInertiaTensor()
@@ -25,36 +28,36 @@ void Airplane::genInertiaTensor()
 	// side length in pixels to draw
 	const int resolution = 700;
 	// length of side of cube that surrounds the model in world space
-	const float length = 20;
-	float pixel_size = length / resolution;
+	const double length = 20;
+	double pixel_size = length / resolution;
 	glViewport(0, 0, resolution, resolution);
 
-	glm::mat4 projection = glm::ortho(-length /2, length /2, -length /2, length /2, 1.f, length +1);
-	glm::mat4 view = glm::lookAt(glm::vec3(0, 0, -length /2-1), glm::vec3(0,0,0), glm::vec3(0, 1, 0));
+	dmat4 projection = ortho(-length /2, length /2, -length /2, length /2, 1.0, length +1);
+	dmat4 view = lookAt(dvec3(0, 0, -length /2-1), dvec3(0,0,0), dvec3(0, 1, 0));
 
 	shader.create("inertia.vert",
 				  "inertia.frag");
 
 	shader.use();
-	shader.uniform("projection", projection);
-	shader.uniform("view", view);
+	shader.uniform("projection", mat4(projection));
+	shader.uniform("view", mat4(view));
 	
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	for (auto&& part : fuselage_parts)
-		recursiveDraw(part.model->getRootNode(), part.transform, shader);
+		recursiveDraw(part.model->getRootNode(), mat4(part.transform), shader);
 	for (auto&& wing : wings)
-		recursiveDraw(wing.model->getRootNode(), wing.transform, shader);
+		recursiveDraw(wing.model->getRootNode(), mat4(wing.transform), shader);
 	
 	GLfloat* depths = new GLfloat[resolution*resolution];
 	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_COMPONENT, GL_FLOAT, depths);
 
-	float Ixx = 0.f;
-	float Iyy = 0.f;
-	float Izz = 0.f;
-	float Ixy = 0.f;
-	float Ixz = 0.f;
-	float Iyz = 0.f;
+	double Ixx = 0;
+	double Iyy = 0;
+	double Izz = 0;
+	double Ixy = 0;
+	double Ixz = 0;
+	double Iyz = 0;
 
 	// assumes all cubes have the same weight
 	int num_cubes = 0;
@@ -63,29 +66,29 @@ void Airplane::genInertiaTensor()
 	{
 		for (int xi = 0; xi < resolution; xi++)
 		{
-			float depth = depths[xi + yi * resolution];
+			double depth = depths[xi + yi * resolution];
 			if (depth == 1.f)
 				continue;
 
 
-			float x = xi;
-			float y = yi;
+			double x = xi;
+			double y = yi;
 
-			glm::vec3 pos;
+			dvec3 pos;
 			pos.x = length*(resolution - x)/ resolution - length/2;
 			pos.y = length*y / resolution - length / 2;
 			pos.z = depth*length - length / 2;
 			
-			glm::vec3 wp = pos;
+			dvec3 wp = pos;
 
 			// loop through all "cubes" behind till z = 0;
-			wp.z += 0.5f*pixel_size;
+			wp.z += 0.5*pixel_size;
 			while(wp.z<0)
 			{
 				num_cubes += 2;
 				
 				// assume symmetry
-				glm::vec3 op(wp.x, wp.y, -wp.z);
+				vec3 op(wp.x, wp.y, -wp.z);
 
 				Ixx += wp.y*wp.y + wp.z*wp.z;
 				Ixx += op.y*op.y + op.z*op.z;
@@ -109,7 +112,7 @@ void Airplane::genInertiaTensor()
 			}
 		}
 	}
-	glm::mat3 tensor(Ixx, Ixy, Ixz,
+	dmat3 tensor(Ixx, Ixy, Ixz,
 					 Ixy, Iyy, Iyz,
 					 Ixz, Iyz, Izz);
 	tensor /= num_cubes;
@@ -118,30 +121,30 @@ void Airplane::genInertiaTensor()
 	delete[] depths;
  }
 
-void Airplane::calcArea()
+double Airplane::calcArea()
 {
 	// side length in pixels to draw
 	int resolution = area_resolution;
 	// length of side of cube that surrounds the model in world space
-	float length = 20;
-	float pixel_size = length / resolution;
+	double length = 20;
+	double pixel_size = length / resolution;
 	glViewport(0, 0, resolution, resolution);
 
-	glm::mat4 projection = glm::ortho(-length / 2, length / 2, -length / 2, length / 2, 1.f, length + 1);
+	dmat4 projection = ortho(-length / 2, length / 2, -length / 2, length / 2, 1.0, length + 1);
 
 
-	glm::vec3 vel = body.momentum;
+	dvec3 vel = body.momentum;
 	if (glm::length(vel) < 0.00001f)
-		return;
+		return 0;
 	
-	glm::mat4 body_transform = body.getTransform();
+	dmat4 body_transform = body.getTransform();
 
-	glm::vec3 eye = 0.5f*length*normalize(vel);
-	glm::vec3 up = glm::vec3(0, 1, 0);
+	dvec3 eye = 0.5*length*normalize(vel);
+	dvec3 up = vec3(0, 1, 0);
 	if (glm::length(cross(eye, up)) <= 0.00001f)
-		up = glm::vec3(1, 0, 0);
+		up = vec3(1, 0, 0);
 
-	glm::mat4 view = glm::lookAt(eye + body.position, body.position, up);
+	dmat4 view = lookAt(eye + body.position, body.position, up);
 
 	shader.use();
 	shader.uniform("projection", projection);
@@ -149,9 +152,9 @@ void Airplane::calcArea()
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 	for (auto&& part : fuselage_parts)
-		recursiveDraw(part.model->getRootNode(), body_transform * part.transform, shader);
+		recursiveDraw(part.model->getRootNode(), mat4(body_transform * part.transform), shader);
 	for (auto&& wing : wings)
-		recursiveDraw(wing.model->getRootNode(), body_transform * wing.transform, shader);
+		recursiveDraw(wing.model->getRootNode(), mat4(body_transform * wing.transform), shader);
 
 	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_COMPONENT, GL_FLOAT, depth_map);
 
@@ -163,7 +166,7 @@ void Airplane::calcArea()
 			num_pixels++;
 	}
 	float area = pixel_size*pixel_size*num_pixels;
-	//std::cout << area << "\n";	
+	return area;
 }
 
 Airplane::~Airplane()
@@ -185,20 +188,20 @@ void Airplane::init()
 	wing->uploadToGPU();
 	fuselage->uploadToGPU();
 
-	glm::mat4 fuselage_t = glm::scale(glm::vec3(8,1,1));
+	dmat4 fuselage_t = scale(dvec3(8,1,1));
 
-	glm::mat4 l_wing_t = glm::translate(glm::vec3(-1,1,-4))*glm::scale(glm::vec3(1.3, 1, 4));
-	glm::mat4 r_wing_t = glm::translate(glm::vec3(-1,1,4))*glm::scale(glm::vec3(1.3, 1, 4));
+	dmat4 l_wing_t = translate(dvec3(-1,1,-4))*scale(dvec3(1.3, 1, 4));
+	dmat4 r_wing_t = translate(dvec3(-1,1,4))*scale(dvec3(1.3, 1, 4));
 
-	glm::mat4 l_hori_t = glm::translate(glm::vec3(-7, 1, -2))*glm::scale(glm::vec3(1, 1, 2));
-	glm::mat4 r_hori_t = glm::translate(glm::vec3(-7, 1, 2))*glm::scale(glm::vec3(1, 1, 2));
-	glm::mat4 vert_t = glm::translate(glm::vec3(-7, 2, 0))*glm::rotate(glm::half_pi<float>(), glm::vec3(1,0,0))*glm::scale(glm::vec3(1, 1, 2));
+	dmat4 l_hori_t = translate(dvec3(-7, 1, -2))*scale(dvec3(1, 1, 2));
+	dmat4 r_hori_t = translate(dvec3(-7, 1, 2))*scale(dvec3(1, 1, 2));
+	dmat4 vert_t = translate(dvec3(-7, 2, 0))*rotate(half_pi<double>(), dvec3(1,0,0))*scale(dvec3(1, 1, 1));
 
 	fuselage_parts.emplace_back(fuselage, fuselage_t);
-	wings.emplace_back(wing, l_wing_t, 6);
-	wings.emplace_back(wing, r_wing_t, 6);
-	wings.emplace_back(wing, l_hori_t, -4);
-	wings.emplace_back(wing, r_hori_t, -4);
+	wings.emplace_back(wing, l_wing_t, 5);
+	wings.emplace_back(wing, r_wing_t, 5);
+	wings.emplace_back(wing, l_hori_t, -3);
+	wings.emplace_back(wing, r_hori_t, -3);
 	wings.emplace_back(wing, vert_t);
 
 	body.setMass(3000);
@@ -214,93 +217,109 @@ void Airplane::init()
 		}
 		std::cout << "\n\n";
 	}
-	body.position = glm::vec3(-400, 400, 0);
-	body.applyImpuls(glm::vec3(100000, 10000, 0), body.position);
-	//body.applyImpuls(glm::vec3(0, 1, 0), body.position + glm::vec3(0,0,5000));
-	//body.applyImpuls(glm::vec3(0, -1, 0), body.position + glm::vec3(0,0,-5000));
+
+	body.position = dvec3(-400, 400, 0);
+	body.applyImpuls(dvec3(1000000, 0, 0), body.position);
 }
 
-void Airplane::update(float dt, Engine& engine)
+void Airplane::update(double dt, Engine& engine)
 {
+	double density = 1.23;
 
-	float density = 1.23;
+	double area = calcArea();
+	double speed = length(body.velocityAt(body.position));
+	double CD = 1;
+	double drag_magn = 0.5f*density* speed*speed * CD * area;
+	dvec3 drag_force = -drag_magn * normalize(body.velocityAt(body.position));
+	body.applyForce(drag_force, body.position);
+	
 	
 	for (auto& wing : wings)
 	{
-		glm::mat4 world_trans = body.getTransform()*wing.transform;
+		dmat4 world_trans = body.getTransform()*wing.transform;
 
-		glm::vec3 diag1 = wing.transform*glm::vec4(0.5, 0, 0.5, 0);
-		glm::vec3 diag2 = wing.transform*glm::vec4(-0.5, 0, 0.5, 0);
-		float area = 2*length(cross(diag1, diag2));
+		dvec3 diag1 = wing.transform*dvec4(0.5, 0, 0.5, 0);
+		dvec3 diag2 = wing.transform*dvec4(-0.5, 0, 0.5, 0);
+		double area = 2*length(cross(diag1, diag2));
 
 		// wing local space base vectors in world
-		glm::vec3 ex = normalize(world_trans*glm::vec4(1, 0, 0, 0));
-		glm::vec3 ey = normalize(world_trans*glm::vec4(0, 1, 0, 0));
-		glm::vec3 ez = normalize(world_trans*glm::vec4(0, 0, 1, 0));
+		dvec3 ex = normalize(world_trans*dvec4(1, 0, 0, 0));
+		dvec3 ey = normalize(world_trans*dvec4(0, 1, 0, 0));
+		dvec3 ez = normalize(world_trans*dvec4(0, 0, 1, 0));
 
-		glm::vec3 wing_pos = glm::vec3(world_trans*glm::vec4(0, 0, 0, 1));
-		glm::vec3 vel = body.velocityAt(wing_pos);
+		dvec3 wing_pos = vec3(world_trans*vec4(0, 0, 0, 1));
+		dvec3 vel = body.velocityAt(wing_pos);
 
-		glm::vec3 alpha_vel = projectToPlane(vel, ex, ey);
-		glm::vec3 beta_vel = projectToPlane(vel, ez, ex);
+		dvec3 alpha_vel = projectToPlane(vel, ex, ey);
+		dvec3 beta_vel = projectToPlane(vel, ez, ex);
 		
-		float angle_of_attack = 0;
-		if (length(alpha_vel) > 0.00000000001f)
+		double angle_of_attack = 0;
+		if (length(alpha_vel) > 0.000000000000000001)
 		{
-			float cosa = glm::dot(normalize(alpha_vel), ex);
-			float radians = std::acos(cosa);
-			angle_of_attack = glm::degrees(radians);
+			double cosa = dot(normalize(alpha_vel), ex);
+			double radians = std::acos(cosa);
+			angle_of_attack = degrees(radians);
 			if (dot(alpha_vel, ey) > 0)
 				angle_of_attack *= -1;
 		}
 			
 
-		std::cout << "Alpha: " << angle_of_attack << "\n";
+		
 
-		float v = length(vel);
-		float Cl = glm::two_pi<float>()*angle_of_attack + wing.Cl0;
+		double v = length(vel);
+		double Cla = 1;//two_pi<float>();
+		double Cl = Cla * angle_of_attack + wing.Cl0;
 
 
-		float lift = 0;
+		double lift = 0;
 		if (angle_of_attack > -20 && angle_of_attack < 20)
-			lift = 0.5f*density*v*v*area*Cl;
+			lift = 0.5*density*v*v*area*Cl;
 
-		std::cout << "Lift: " << lift << "\n\n";
+
+		if (lift > 0 || lift < 0)
+		{
+			//std::cout << "Alpha: " << angle_of_attack << "\n";
+			//std::cout << "Lift: " << lift << "\n\n";
+		}
 		
 
 		body.applyForce(lift*ey, wing_pos);
 
-		engine.getVectors().addVector(wing_pos, normalize(alpha_vel), glm::vec3(1, 0, 0));
+		engine.getVectors().addVector(wing_pos, normalize(alpha_vel), dvec3(1, 0, 0));
 
-		engine.getVectors().addVector(wing_pos, ex, glm::vec3(0, 1, 1));
-		engine.getVectors().addVector(wing_pos, ey, glm::vec3(0, 1, 1));
-		engine.getVectors().addVector(wing_pos, ez, glm::vec3(0, 1, 1));
+		engine.getVectors().addVector(wing_pos, ex, dvec3(0, 1, 1));
+		//engine.getVectors().addVector(wing_pos, ey, dvec3(0, 1, 1));
+		//engine.getVectors().addVector(wing_pos, ez, dvec3(0, 1, 1));
 	}
 
 
 	for (auto&& f : body.applied_forces)
 	{
-		engine.getVectors().addVector(f.first, f.second, glm::vec3(1, 0, 1));
+		engine.getVectors().addVector(f.first, f.second, vec3(1, 0, 1));
 	}
 
 	//calcArea();
-	body.applyForce(glm::vec3(0, -9.82*body.mass, 0), body.position);
+	body.applyForce(dvec3(0, -9.82*body.mass, 0), body.position);
 	body.update(dt);
 
 
-
+	std::string pos_text = "Position: (";
+	pos_text += std::to_string((int)body.position.y);
+	pos_text += ", " + std::to_string((int)body.position.y);
+	pos_text += ", " + std::to_string((int)body.position.z) + ")";
+	engine.getTexts().addText(0,0, pos_text);
 	
 
-	glm::vec3 v = body.velocityAt(body.position);
-	glm::vec3 pos = body.position + log(length(v))*normalize(v);
+	dvec3 v = body.velocityAt(body.position);
+	dvec3 pos = body.position + log(length(v))*normalize(v);
 	engine.getTexts().addText(pos, std::to_string((int)length(v)) + " m/s");
 
-	glm::vec3 w = body.inverse_inertia*body.angular_momentum;
+	dvec3 w = body.inverse_inertia*body.angular_momentum;
 	pos = body.position + normalize(w); log(length(w))*normalize(w);
-	engine.getTexts().addText(pos, std::to_string(60.f*length(w)/glm::two_pi<float>()) + " rpm");
+	engine.getTexts().addText(pos, std::to_string(60.f*length(w)/two_pi<float>()) + " rpm");
 
-	engine.getVectors().addVector(body.position, w, glm::vec3(0, 1, 0));
-	engine.getVectors().addVector(body.position, body.velocityAt(body.position), glm::vec3(1, 0, 0));
+	engine.getVectors().addVector(body.position, w, dvec3(0, 1, 0));
+	engine.getVectors().addVector(body.position, body.velocityAt(body.position), dvec3(1, 0, 0));
 
 	
 }
@@ -309,7 +328,7 @@ void Airplane::update(float dt, Engine& engine)
 void Airplane::draw(Renderer & renderer)
 {
 	for (auto&& part : fuselage_parts)
-		renderer.draw(*part.model, body.getTransform()*part.transform);
+		renderer.draw(*part.model, mat4(body.getTransform()*part.transform));
 	for (auto&& wing : wings)
-		renderer.draw(*wing.model, body.getTransform()*wing.transform);
+		renderer.draw(*wing.model, mat4(body.getTransform()*wing.transform));
 }

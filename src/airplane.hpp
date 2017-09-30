@@ -11,15 +11,15 @@ class Engine;
 struct Wing
 {
 	Wing(std::shared_ptr<Model> _model,
-			 glm::mat4 _transform, float _Cl0 = 0)
+			 glm::mat4 _transform, double _Cl0 = 0)
 	{
 		model = _model;
 		transform = _transform;
 		Cl0 = _Cl0;
 	}
 	std::shared_ptr<Model> model;
-	glm::mat4 transform;
-	float Cl0;
+	glm::dmat4 transform;
+	double Cl0;
 };
 
 struct Fuselage
@@ -31,7 +31,7 @@ struct Fuselage
 		transform = _transform;
 	}
 	std::shared_ptr<Model> model;
-	glm::mat4 transform;
+	glm::dmat4 transform;
 };
 
 class Airplane : public Drawable
@@ -47,7 +47,7 @@ class Airplane : public Drawable
 
 	void genInertiaTensor();
 
-	void calcArea();
+	double calcArea();
 public:
 	Body body;
 
@@ -55,7 +55,7 @@ public:
 
 	void init();
 
-	void update(float dt, Engine& engine);
+	void update(double dt, Engine& engine);
 
 	virtual void draw(Renderer& renderer);
 };
