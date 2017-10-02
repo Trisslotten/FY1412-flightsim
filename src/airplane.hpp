@@ -16,10 +16,12 @@ struct Wing
 		model = _model;
 		transform = _transform;
 		Cl0 = _Cl0;
+		stalling = false;
 	}
 	std::shared_ptr<Model> model;
 	glm::dmat4 transform;
 	double Cl0;
+	bool stalling;
 };
 
 struct Fuselage

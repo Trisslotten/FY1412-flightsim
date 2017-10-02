@@ -6,6 +6,7 @@
 
 using namespace glm;
 
+double density = 1.23;
 
 // assume origo is in line
 dvec3 projectOnLine(dvec3 to_project, dvec3 v)
@@ -154,7 +155,11 @@ void Airplane::calcArea()
 	for (auto&& part : fuselage_parts)
 		recursiveDraw(part.model->getRootNode(), mat4(body_transform * part.transform), shader);
 	for (auto&& wing : wings)
-		recursiveDraw(wing.model->getRootNode(), mat4(body_transform * wing.transform), shader);
+	{
+		if(wing.stalling)
+			recursiveDraw(wing.model->getRootNode(), mat4(body_transform * wing.transform), shader);
+	}
+		
 
 	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_COMPONENT, GL_FLOAT, depth_map);
 
@@ -221,6 +226,7 @@ void Airplane::init()
 
 	dmat4 l_wing_t = translate(dvec3(-1,-1,-4))*scale(dvec3(1.3, 1, 4));
 	dmat4 r_wing_t = translate(dvec3(-1,-1,4))*scale(dvec3(1.3, 1, 4));
+	dmat4 u_wing_t = translate(dvec3(-1, 1, 0))*scale(dvec3(1.3, 1, 8));
 
 	dmat4 l_hori_t = translate(dvec3(-7, 1, -2))*scale(dvec3(1, 1, 2));
 	dmat4 r_hori_t = translate(dvec3(-7, 1, 2))*scale(dvec3(1, 1, 2));
@@ -229,9 +235,11 @@ void Airplane::init()
 	fuselage_parts.emplace_back(fuselage, fuselage_t);
 	wings.emplace_back(wing, l_wing_t, 1);
 	wings.emplace_back(wing, r_wing_t, 1);
+	
 	wings.emplace_back(wing, l_hori_t, -1);
 	wings.emplace_back(wing, r_hori_t, -1);
 	wings.emplace_back(wing, vert_t);
+	wings.emplace_back(wing, u_wing_t, 1);
 
 	body.setMass(3000);
 
@@ -248,8 +256,8 @@ void Airplane::init()
 	}
 
 	body.position = dvec3(-400, 400, 0);
-	body.applyImpuls(dvec3(1000000, 0, 0), body.position);
-	body.applyImpuls(dvec3(0, 10000, 0), body.position + dvec3(0,0,2));
+//	body.applyImpuls(dvec3(1000000, 0, 0), body.position);
+//	body.applyImpuls(dvec3(0, 10000, 0), body.position + dvec3(0,0,2));
 }
 
 void Airplane::update(double dt, Engine& engine)
@@ -290,27 +298,15 @@ void Airplane::update(double dt, Engine& engine)
 	}
 
 	
-
-
-	double density = 1.23;
-
-	calcArea();
-	double speed = length(body.velocityAt(body.position));
-	if (speed > 0.0000000001)
-	{
-		double CD = 1;
-		double drag_magn = 0.5f*density* speed*speed * CD * reference_area;
-		dvec3 drag_force = -drag_magn * normalize(body.velocityAt(body.position));
-		body.applyForce(drag_force, drag_center);
-	}
-	
 	for (auto& wing : wings)
 	{
 		dmat4 world_trans = body.getTransform()*wing.transform;
 
 		dvec3 diag1 = wing.transform*dvec4(0.5, 0, 0.5, 0);
 		dvec3 diag2 = wing.transform*dvec4(-0.5, 0, 0.5, 0);
+		dvec3 half_wing_length = wing.transform*dvec4(0, 0, 0.5, 0);
 		double area = 2*length(cross(diag1, diag2));
+		double wing_length = 2 * length(half_wing_length);
 
 		// wing local space base vectors in world
 		dvec3 ex = normalize(world_trans*dvec4(1, 0, 0, 0));
@@ -332,9 +328,6 @@ void Airplane::update(double dt, Engine& engine)
 			if (dot(alpha_vel, ey) > 0)
 				angle_of_attack *= -1;
 		}
-			
-
-		
 
 		double v = length(vel);
 		double Cla = 1;//two_pi<float>();
@@ -343,27 +336,44 @@ void Airplane::update(double dt, Engine& engine)
 
 		double lift = 0;
 		if (angle_of_attack > -20 && angle_of_attack < 20)
+		{
 			lift = 0.5*density*v*v*area*Cl;
 
+			double induced_drag = 2.0*lift*lift / (density * v * v * glm::pi<double>() * wing_length * wing_length);
 
-		if (lift > 0 || lift < 0)
-		{
-			//std::cout << "Alpha: " << angle_of_attack << "\n";
-			//std::cout << "Lift: " << lift << "\n\n";
+			body.applyForce(lift*ey, wing_pos);
+			if(v > 0.0000000001)
+				body.applyForce(-induced_drag*normalize(vel), wing_pos);
+
+			wing.stalling = false;
 		}
-		
+		else
+		{
+			wing.stalling = true;
+		}
 
-		body.applyForce(lift*ey, wing_pos);
-
+		// DEBUG
 		//engine.getVectors().addVector(wing_pos, normalize(alpha_vel), dvec3(1, 0, 0));
-
 		//engine.getVectors().addVector(wing_pos, ex, dvec3(0, 1, 1));
 		//engine.getVectors().addVector(wing_pos, ey, dvec3(0, 1, 1));
 		//engine.getVectors().addVector(wing_pos, ez, dvec3(0, 1, 1));
 	}
 
+
+
+	calcArea();
+	double speed = length(body.velocityAt(body.position));
+	if (speed > 0.0000000001)
+	{
+		double CD = 1;
+		double drag_magn = 0.5f*density* speed*speed * CD * reference_area;
+		dvec3 drag_force = -drag_magn * normalize(body.velocityAt(body.position));
+		body.applyForce(drag_force, drag_center);
+	}
+
+
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
-	body.applyForce(100000.0*forward, body.position);
+	//body.applyForce(100000.0*forward, body.position);
 
 
 	body.applyForce(dvec3(0, -9.82*body.mass, 0), body.position);
