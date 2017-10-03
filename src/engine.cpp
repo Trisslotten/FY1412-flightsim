@@ -27,7 +27,7 @@ void Engine::init()
 
 void Engine::update()
 {
-	double frame_time = 1 / 144.0;
+	double frame_time = 0.5 / 144.0;
 	double timescale = 1;
 	double dt = timer.restart();
 	if(dt < 1)
