@@ -81,6 +81,9 @@
     <ClCompile Include="texts.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="lookup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine.hpp">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="texts.hpp">
       <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="lookup.hpp">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

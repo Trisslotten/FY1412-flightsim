@@ -135,6 +135,7 @@
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="font.cpp" />
     <ClCompile Include="lodepng.cpp" />
+    <ClCompile Include="lookup.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="material.cpp" />
     <ClCompile Include="mesh.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="font.hpp" />
     <ClInclude Include="liftdata.hpp" />
     <ClInclude Include="lodepng.h" />
+    <ClInclude Include="lookup.hpp" />
     <ClInclude Include="material.hpp" />
     <ClInclude Include="mesh.hpp" />
     <ClInclude Include="model.hpp" />

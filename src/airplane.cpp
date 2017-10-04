@@ -3,6 +3,7 @@
 #include <glm/gtx/transform.hpp>
 #include <iostream>
 #include "engine.hpp"
+#include "lookup.hpp"
 
 using namespace glm;
 
@@ -30,6 +31,8 @@ Airplane::~Airplane()
 void Airplane::init()
 {
 	depth_map = new GLfloat[area_resolution*area_resolution];
+
+	LookUpTable lut("assets/tables/NACA 2415 R50.txt");
 
 	buildPlane();
 
