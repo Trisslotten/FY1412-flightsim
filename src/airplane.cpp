@@ -32,8 +32,14 @@ void Airplane::init()
 {
 	depth_map = new GLfloat[area_resolution*area_resolution];
 
-	LookUpTable lut("assets/tables/NACA 2415 R50.txt");
+	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
+	LookUpTable lut(NACA2415paths);
 
+	lut.lookUp(6.577, 40000);
+	lut.lookUp(6.577, 120000);
+	lut.lookUp(6.577, 340000);
+	lut.lookUp(6.577, 360000);
+	lut.lookUp(6.577, 900000);
 	buildPlane();
 
 	genInertiaTensor();
@@ -59,11 +65,15 @@ void Airplane::buildPlane()
 	dmat4 vert_t = translate(dvec3(-7, 2, 0))*rotate(half_pi<double>(), dvec3(1, 0, 0))*scale(dvec3(1, 1, 1));
 
 	fuselage_parts.emplace_back(fuselage, fuselage_t);
-	wings.emplace_back(wing, l_wing_t, 1);
-	wings.emplace_back(wing, r_wing_t, 1);
 
-	wings.emplace_back(wing, l_hori_t, -1);
-	wings.emplace_back(wing, r_hori_t, -1);
+	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
+	LookUpTable* lut = new LookUpTable(NACA2415paths);
+
+	wings.emplace_back(wing, l_wing_t, lut, 1);
+	wings.emplace_back(wing, r_wing_t, lut, 1);
+
+	wings.emplace_back(wing, l_hori_t, lut, -1);
+	wings.emplace_back(wing, r_hori_t, lut, -1);
 	wings.emplace_back(wing, vert_t);
 
 	body.setMass(3000);
@@ -104,6 +114,7 @@ void Airplane::calcLift(Wing & wing)
 	double v = length(vel);
 	double Cla = 1;//two_pi<float>();
 	double Cl = Cla * angle_of_attack + wing.Cl0;
+	//använd wing.table.lookUp(angle of attack,Reynolds tal) här. Returnar en struct med -2,-2 för cl och cd om odef. för specifierad angle.
 
 
 	double lift = 0;

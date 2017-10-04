@@ -5,13 +5,23 @@
 #include "model.hpp"
 #include "body.hpp"
 #include "renderer.hpp"
+#include "lookup.hpp"
 
 class Engine;
 
 struct Wing
 {
 	Wing(std::shared_ptr<Model> _model,
-			 glm::mat4 _transform, double _Cl0 = 0)
+			 glm::mat4 _transform, LookUpTable* _table, double _Cl0 = 0)
+	{
+		model = _model;
+		transform = _transform;
+		Cl0 = _Cl0;
+		stalling = false;
+		table = _table;
+	}
+	Wing(std::shared_ptr<Model> _model,
+		glm::mat4 _transform, double _Cl0 = 0)
 	{
 		model = _model;
 		transform = _transform;
@@ -22,6 +32,7 @@ struct Wing
 	glm::dmat4 transform;
 	double Cl0;
 	bool stalling;
+	LookUpTable* table;
 };
 
 struct Fuselage
