@@ -7,7 +7,7 @@
 
 class Camera {
 
-	GLfloat zoom = 1.f;
+	GLfloat zoom = 22.f;
 
 	glm::vec3 follow_pos;
 
@@ -22,8 +22,8 @@ class Camera {
 	glm::vec3 pos{ 0,0,0 };
 
 public:
-	
-	
+
+
 	void update(Window& window, glm::vec3 follow_pos);
 
 	glm::vec3 getPos()

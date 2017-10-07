@@ -10,7 +10,7 @@ glm::dmat4 Body::getTransform()
 
 glm::dvec3 Body::velocityAt(glm::dvec3 world_pos)
 {
-	return momentum*inverse_mass + glm::cross(angular_momentum, world_pos - position)*inverse_inertia;
+	return momentum*inverse_mass + glm::cross(inverse_inertia*angular_momentum, world_pos - position);
 }
 
 void Body::applyForce(glm::dvec3 _force, glm::dvec3 world_pos)

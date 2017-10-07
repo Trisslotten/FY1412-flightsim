@@ -69,15 +69,15 @@ void Airplane::buildPlane()
 	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
 	LookUpTable* lut = new LookUpTable(NACA2415paths);
 
-	wings.emplace_back(wing, l_wing_t, lut, 1);
-	wings.emplace_back(wing, r_wing_t, lut, 1);
+	wings.emplace_back(wing, l_wing_t, lut, 2);
+	wings.emplace_back(wing, r_wing_t, lut, 2);
 
-	wings.emplace_back(wing, l_hori_t, lut, -1);
-	wings.emplace_back(wing, r_hori_t, lut, -1);
+	wings.emplace_back(wing, l_hori_t, lut, -2);
+	wings.emplace_back(wing, r_hori_t, lut, -2);
 	wings.emplace_back(wing, vert_t);
 
 	body.setMass(3000);
-	body.position = dvec3(-400, 400, 0);
+	body.position = dvec3(-600, 1000, 0);
 }
 
 void Airplane::calcLift(Wing & wing)
@@ -141,7 +141,7 @@ void Airplane::calcLift(Wing & wing)
 	}
 
 	// DEBUG
-	//engine.getVectors().addVector(wing_pos, normalize(alpha_vel), dvec3(1, 0, 0));
+	//engine.getVectors().addVector(wing_pos, alpha_vel, dvec3(1, 0, 0));
 	//engine.getVectors().addVector(wing_pos, ex, dvec3(0, 1, 1));
 	//engine.getVectors().addVector(wing_pos, ey, dvec3(0, 1, 1));
 	//engine.getVectors().addVector(wing_pos, ez, dvec3(0, 1, 1));
@@ -159,7 +159,7 @@ void Airplane::calcDrag()
 
 	dmat4 projection = ortho(-length / 2, length / 2, -length / 2, length / 2, 0.001, length);
 
-	dvec3 vel = body.momentum;
+	dvec3 vel = body.velocityAt(body.position);
 	if (glm::length(vel) < epsilon<double>())
 		return;
 
@@ -237,37 +237,39 @@ void Airplane::update(double dt, Engine& engine)
 
 	Window& w = engine.getWindow();
 	double flaps = 7;
+	double hori_cl0 = -1;
 	if (w.keyDown(GLFW_KEY_S))
 	{
-		wings[2].Cl0 = -1 - flaps;
-		wings[3].Cl0 = -1 - flaps;
+		wings[2].Cl0 = hori_cl0 - flaps;
+		wings[3].Cl0 = hori_cl0 - flaps;
 	}
 	else if (w.keyDown(GLFW_KEY_W))
 	{
-		wings[2].Cl0 = -1 + flaps;
-		wings[3].Cl0 = -1 + flaps;
+		wings[2].Cl0 = hori_cl0 + flaps;
+		wings[3].Cl0 = hori_cl0 + flaps;
 	}
 	else
 	{
-		wings[2].Cl0 = -1;
-		wings[3].Cl0 = -1;
+		wings[2].Cl0 = hori_cl0;
+		wings[3].Cl0 = hori_cl0;
 	}
 
-	double change = 5;
+	double ailerons = 5;
+	double wing_cl0 = 2;
 	if (w.keyDown(GLFW_KEY_A))
 	{
-		wings[0].Cl0 = 1 - change;
-		wings[1].Cl0 = 1 + change;
+		wings[0].Cl0 = wing_cl0 - ailerons;
+		wings[1].Cl0 = wing_cl0 + ailerons;
 	}
 	else if (w.keyDown(GLFW_KEY_D))
 	{
-		wings[0].Cl0 = 1 + change;
-		wings[1].Cl0 = 1 - change;
+		wings[0].Cl0 = wing_cl0 + ailerons;
+		wings[1].Cl0 = wing_cl0 - ailerons;
 	}
 	else
 	{
-		wings[0].Cl0 = 1;
-		wings[1].Cl0 = 1;
+		wings[0].Cl0 = wing_cl0;
+		wings[1].Cl0 = wing_cl0;
 	}
 
 	
