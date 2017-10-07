@@ -99,6 +99,9 @@ void Renderer::init(Window* _window)
 	shader.create("shader.vert", "shader.geom", "shader.frag");
 	skybox_shader.create("skybox.vert", "skybox.frag");
 	createSkybox();
+	
+	near = 1;
+	far = 10000;
 
 	glm::vec2 size = window->getWindowSize();
 	glViewport(0, 0, size.x, size.y);
@@ -120,13 +123,25 @@ void Renderer::setColor(glm::vec4 color)
 	shader.uniform("mat_color", color);
 }
 
+void Renderer::setNearFarPlane(float near, float far)
+{
+	glm::vec2 size = getWindowSize();
+	this->near = near;
+	this->far = far;
+	projection = glm::perspective<double>(fov, size.x / size.y, near, far);
+	view = current_camera->getView();
+	shader.use();
+	shader.uniform("projection", projection);
+	skybox_shader.use();
+	skybox_shader.uniform("projection", projection);
+}
+
 void Renderer::initDrawing(Window& window)
 {
 	glm::vec2 size = getWindowSize();
 	glViewport(0, 0, size.x, size.y);
 
-	double fov = 3.141529*0.45;
-	projection = glm::perspective<double>(fov, size.x / size.y, 1, 1000);
+	projection = glm::perspective<double>(fov, size.x / size.y, near, far);
 	view = current_camera->getView();
 	shader.use();
 	shader.uniform("projection", projection);

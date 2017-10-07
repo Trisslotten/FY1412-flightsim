@@ -16,10 +16,15 @@ void Engine::init()
 	window.open(1280, 720, false);
 	camera = std::make_shared<Camera>();
 	renderer.setCamera(camera);
+	terrain.init();
+	terrain.update(glm::vec3());
+
 
 	airplane.init();
 	vectors.init();
 	renderer.init(&window);
+	
+
 
 	cloud.load("cloud.obj");
 	cloud.uploadToGPU();
@@ -47,6 +52,7 @@ void Engine::update()
 	}
 
 	camera->update(window, airplane.body.position);
+	terrain.update(airplane.body.position);
 }
 
 void Engine::render()
@@ -58,12 +64,16 @@ void Engine::render()
 
 	renderer.setColor(glm::vec4(0.8,0.8,0.8,1));
 	renderer.draw(airplane);
-	
+	renderer.setNearFarPlane(10, 50000);
+	renderer.draw(terrain);
+
 	renderer.drawSkybox();
 
-	glm::mat4 scale = glm::scale(glm::vec3(20));
+	
+
+	glm::mat4 scale = glm::scale(glm::vec3(50));
 	int side = 20;
-	float spacing = 300.f;
+	float spacing = 1000.f;
 	for (int i = 0; i < side*side; i++)
 	{
 		int x = i % side-side/2;

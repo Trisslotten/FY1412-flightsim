@@ -84,6 +84,12 @@
     <ClCompile Include="lookup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="terrain.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="FastNoise.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine.hpp">
@@ -141,6 +147,12 @@
       <Filter>Source Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="lookup.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="terrain.hpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="FastNoise.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

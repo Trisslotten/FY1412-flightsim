@@ -7,6 +7,7 @@
 #include "airplane.hpp"
 #include "vectors.hpp"
 #include "texts.hpp"
+#include "terrain.hpp"
 
 class Engine
 {
@@ -22,6 +23,7 @@ class Engine
 	Airplane airplane;
 
 	Model cloud;
+	Terrain terrain;
 
 	Timer global_time;
 	Timer timer;

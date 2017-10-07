@@ -33,6 +33,9 @@ class Renderer
 
 	ShaderProgram shader;
 
+	double fov = glm::radians(90.0);
+	float near, far;
+
 	glm::mat4 projection;
 	glm::mat4 view;
 
@@ -59,6 +62,7 @@ public:
 	void init(Window* window);
 
 	void setColor(glm::vec4 color);
+	void setNearFarPlane(float near, float far);
 
 	void initDrawing(Window& window);
 

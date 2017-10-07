@@ -7,7 +7,7 @@ in vec3 frag_normal;
 in vec3 frag_pos;
 
 const vec3 sun_dir = vec3(-4,-2, 0.3);
-const vec3 sun_color = vec3(1,1,1);
+const vec3 sun_color = vec3(0.9, 0.9, 0.87);
 
 uniform vec4 mat_color;
 
@@ -19,7 +19,7 @@ void main()
 	float i = dot(-sun_dir,n);
 
 	vec3 diffuse = clamp(mat_color.xyz*sun_color*i, 0, 1);
-	vec3 ambient = mat_color.xyz*0.4;
+	vec3 ambient = mat_color.rgb*0.3;
 
 	vec3 color = ambient + diffuse;
 
