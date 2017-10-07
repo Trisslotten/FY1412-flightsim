@@ -57,8 +57,8 @@ void Airplane::buildPlane()
 
 	dmat4 fuselage_t = scale(dvec3(8, 1, 1));
 
-	dmat4 l_wing_t = translate(dvec3(-1, 0, -4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1.3, 1, 4));
-	dmat4 r_wing_t = translate(dvec3(-1, 0, 4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1.3, 1, 4));
+	dmat4 l_wing_t = translate(dvec3(-1, 0, -4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
+	dmat4 r_wing_t = translate(dvec3(-1, 0, 4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
 
 	dmat4 l_hori_t = translate(dvec3(-7, 1, -2))*scale(dvec3(1, 1, 2));
 	dmat4 r_hori_t = translate(dvec3(-7, 1, 2))*scale(dvec3(1, 1, 2));
@@ -112,7 +112,7 @@ void Airplane::calcLift(Wing & wing)
 	}
 
 	double v = length(vel);
-	double Cla = 1;//two_pi<float>();
+	double Cla = 0.3;//two_pi<float>();
 	double Cl = Cla * angle_of_attack + wing.Cl0;
 	//använd wing.table.lookUp(angle of attack,Reynolds tal) här. Returnar en struct med -2,-2 för cl och cd om odef. för specifierad angle.
 
@@ -236,17 +236,17 @@ void Airplane::update(double dt, Engine& engine)
 	body.update(dt);
 
 	Window& w = engine.getWindow();
-	double flaps = 7;
-	double hori_cl0 = -1;
+	double elevator  = 2;
+	double hori_cl0 = 0;
 	if (w.keyDown(GLFW_KEY_S))
 	{
-		wings[2].Cl0 = hori_cl0 - flaps;
-		wings[3].Cl0 = hori_cl0 - flaps;
+		wings[2].Cl0 = hori_cl0 - elevator;
+		wings[3].Cl0 = hori_cl0 - elevator;
 	}
 	else if (w.keyDown(GLFW_KEY_W))
 	{
-		wings[2].Cl0 = hori_cl0 + flaps;
-		wings[3].Cl0 = hori_cl0 + flaps;
+		wings[2].Cl0 = hori_cl0 + elevator;
+		wings[3].Cl0 = hori_cl0 + elevator;
 	}
 	else
 	{
@@ -254,8 +254,8 @@ void Airplane::update(double dt, Engine& engine)
 		wings[3].Cl0 = hori_cl0;
 	}
 
-	double ailerons = 5;
-	double wing_cl0 = 2;
+	double ailerons = 0.5;
+	double wing_cl0 = 0;
 	if (w.keyDown(GLFW_KEY_A))
 	{
 		wings[0].Cl0 = wing_cl0 - ailerons;
@@ -281,7 +281,7 @@ void Airplane::update(double dt, Engine& engine)
 	calcDrag();
 
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
-	//body.applyForce(100000.0*forward, body.position);
+	//body.applyForce(600000.0*forward, body.position);
 
 	body.applyForce(dvec3(0, -9.82*body.mass, 0), body.position);
 

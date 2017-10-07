@@ -8,6 +8,7 @@
 #include "vectors.hpp"
 #include "texts.hpp"
 #include "terrain.hpp"
+#include "clouds.hpp"
 
 class Engine
 {
@@ -22,8 +23,8 @@ class Engine
 
 	Airplane airplane;
 
-	Model cloud;
 	Terrain terrain;
+	Clouds clouds;
 
 	Timer global_time;
 	Timer timer;
@@ -35,6 +36,10 @@ public:
 	Window& getWindow() { return window; }
 
 	Engine() {}
+	~Engine() 
+	{
+		window.close();
+	}
 
 	void init();
 

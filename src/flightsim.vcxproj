@@ -132,6 +132,7 @@
     <ClCompile Include="airplane.cpp" />
     <ClCompile Include="body.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="clouds.cpp" />
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="FastNoise.cpp" />
     <ClCompile Include="font.cpp" />
@@ -155,10 +156,10 @@
     <ClInclude Include="airplane.hpp" />
     <ClInclude Include="body.hpp" />
     <ClInclude Include="camera.hpp" />
+    <ClInclude Include="clouds.hpp" />
     <ClInclude Include="engine.hpp" />
     <ClInclude Include="FastNoise.h" />
     <ClInclude Include="font.hpp" />
-    <ClInclude Include="liftdata.hpp" />
     <ClInclude Include="lodepng.h" />
     <ClInclude Include="lookup.hpp" />
     <ClInclude Include="material.hpp" />

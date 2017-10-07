@@ -10,8 +10,8 @@ int main(void)
 	while (!engine.shouldExit())
 	{
 		engine.update();
-		engine.render();
+		engine.render(); 
 	}
-	
+	exit(0);
 	return 0;
 }

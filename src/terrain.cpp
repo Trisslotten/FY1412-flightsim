@@ -12,18 +12,35 @@
 
 namespace
 {
-	FastNoise noise;
 
-	float heightAt(glm::vec2 pos)
+	float noiseFunc(glm::vec2 pos, FastNoise& noise)
 	{
-		float scale = 1000;
-		return scale*noise.GetNoise(pos.x / scale, pos.y / scale);
+		float scale = 2000;
+		return scale*noise.GetNoise(pos.x / scale, pos.y / scale) - 500;
 	}
 }
 
 
 Terrain::Terrain()
 {}
+
+Terrain::~Terrain()
+{
+	for (auto&& c : chunks)
+	{
+		delete c.second;
+	}
+	for (auto&& c : async_added)
+	{
+		c.wait();
+		delete c.get();
+	}
+}
+
+float Terrain::heightAt(glm::vec3 pos)
+{
+	return noiseFunc(glm::vec2(pos.x, pos.z), noise);
+}
 
 void Terrain::init()
 {
@@ -36,13 +53,19 @@ void Terrain::init()
 	lod_distances.push_back(CHUNK_SIZE * 2);
 	lod_distances.push_back(CHUNK_SIZE * 4);
 	lod_distances.push_back(CHUNK_SIZE * 8);
-	lod_distances.push_back(CHUNK_SIZE * 16);
 
 	noise.SetSeed(1337);
 	noise.SetFrequency(0.1);
 	noise.SetFractalOctaves(15);
 	noise.SetFractalType(FastNoise::FractalType::FBM);
 	noise.SetNoiseType(FastNoise::NoiseType::SimplexFractal);
+
+
+	update(glm::vec3(0, 0, 0));
+	while(async_added.size() > 0)
+	{
+		update(glm::vec3(0, 0, 0));
+	}
 }
 
 
@@ -54,7 +77,7 @@ glm::vec3 calcNormal(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 }
 
 
-Chunk::Chunk(glm::vec2 pos, unsigned lod_level)
+Chunk::Chunk(glm::vec2 pos, unsigned lod_level, FastNoise& noise)
 {
 
 	float resolution = 1.f / std::powf(2.f, lod_level - 1);
@@ -74,35 +97,38 @@ Chunk::Chunk(glm::vec2 pos, unsigned lod_level)
 	{
 		for (int x = 0; x <= curr_grid_size; x++)
 		{
-			std::this_thread::sleep_for(std::chrono::nanoseconds(500));
-
 			float cell_length = CHUNK_SIZE / (curr_grid_size);
 			glm::vec2 world_2d = glm::vec2(x, y)*cell_length + CHUNK_SIZE*pos;
-			float height = heightAt(world_2d);
+			float height = noiseFunc(world_2d, noise);
 			glm::vec3 world_pos(world_2d.x, height, world_2d.y);
 
+			/*
+			** for smooth normals
 			cell_length = CHUNK_SIZE / CHUNK_GRID_SIZE;
 			glm::vec3 normal;
 			glm::vec3 p1(world_pos.x + cell_length, 0, world_pos.z);
-			p1.y = heightAt(glm::vec2(p1.x, p1.z));
+			p1.y = noiseFunc(glm::vec2(p1.x, p1.z));
 
 			glm::vec3 p2(world_pos.x, 0, world_pos.z + cell_length);
-			p2.y = heightAt(glm::vec2(p2.x, p2.z));
+			p2.y = noiseFunc(glm::vec2(p2.x, p2.z));
 
 			glm::vec3 p3(world_pos.x - cell_length, 0, world_pos.z);
-			p3.y = heightAt(glm::vec2(p3.x, p3.z));
+			p3.y = noiseFunc(glm::vec2(p3.x, p3.z));
 
 			glm::vec3 p4(world_pos.x, 0, world_pos.z - cell_length);
-			p4.y = heightAt(glm::vec2(p4.x, p4.z));
+			p4.y = noiseFunc(glm::vec2(p4.x, p4.z));
 
 			normal += calcNormal(world_pos, p1, p2);
 			normal += calcNormal(world_pos, p2, p3);
 			normal += calcNormal(world_pos, p3, p4);
 			normal += calcNormal(world_pos, p4, p1);
 			normal = glm::normalize(normal);
-
-
+			
 			vertices.emplace_back(world_pos, normal, glm::vec2());
+			*/
+
+			vertices.emplace_back(world_pos, glm::vec3(), glm::vec2());
+
 			//std::cout << "  " << world_2d.x << " " << world_2d.y << "\n";
 		}
 	}
@@ -134,16 +160,16 @@ Chunk::Chunk(glm::vec2 pos, unsigned lod_level)
 
 
 
-Chunk* createChunk(glm::vec2 pos, unsigned lod_level)
+Chunk* createChunk(glm::vec2 pos, unsigned lod_level, FastNoise& noise)
 {
-	return new Chunk(pos, lod_level);
+	return new Chunk(pos, lod_level, noise);
 }
 
 void Terrain::addChunk(int x, int y, unsigned lod_level)
 {
 	//std::cout << "Creating Chunk: " << x << " " << y << "\n";
 	is_loading[std::make_pair(x, y)] = true;
-	async_added.push_back(std::async(createChunk, glm::vec2(x, y), lod_level));
+	async_added.push_back(std::async(createChunk, glm::vec2(x, y), lod_level, noise));
 }
 
 void Terrain::keepChunk(int x, int y, unsigned lod_level)
@@ -236,10 +262,10 @@ void Terrain::update(glm::vec3 pos)
 
 void Terrain::draw(Renderer & renderer)
 {
-	renderer.setColor(glm::vec4(0, 0.282353, 0.0170588, 1));
+	renderer.setColor(glm::vec4(0, 0.222353, 0.0170588, 1));
 	for (auto & map_e : chunks)
 	{
 		Chunk* chunk = map_e.second;
-		renderer.draw(chunk->surface, glm::translate(glm::vec3(0, -800, 0)));
+		renderer.draw(chunk->surface, glm::mat4());
 	}
 }

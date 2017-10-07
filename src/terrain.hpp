@@ -7,11 +7,12 @@
 #include "model.hpp"
 #include "renderer.hpp"
 #include "shader.hpp"
+#include "FastNoise.h"
 
 #define Key std::pair<int, int>
 
-const int CHUNK_GRID_SIZE = 64;
-const float CHUNK_SIZE = 1024.f * 4;
+const int CHUNK_GRID_SIZE = 128;
+const float CHUNK_SIZE = 1024.f * 8;
 
 struct Chunk
 {
@@ -24,13 +25,17 @@ struct Chunk
 	glm::ivec2 pos;
 	unsigned lod_level = 1;
 	Model surface;
-	Chunk(glm::vec2 pos, unsigned lod_level);
+	Chunk(glm::vec2 pos, unsigned lod_level, FastNoise& noise);
 };
 
 class Terrain : public Drawable
 {
+	FastNoise noise;
+
 	std::map<Key, Chunk*> chunks;
 	std::map<Key, bool> is_loading;
+
+	std::vector<std::future<Chunk*>> async_added;
 
 	std::vector<float> lod_distances;
 
@@ -40,9 +45,11 @@ class Terrain : public Drawable
 
 	void checkChunk(int x, int y, glm::vec3 pos);
 public:
-	std::vector<std::future<Chunk*>> async_added;
 
 	Terrain();
+	~Terrain();
+
+	float heightAt(glm::vec3 pos);
 
 	void init();
 

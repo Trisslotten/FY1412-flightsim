@@ -24,10 +24,7 @@ void Engine::init()
 	vectors.init();
 	renderer.init(&window);
 	
-
-
-	cloud.load("cloud.obj");
-	cloud.uploadToGPU();
+	clouds.init();
 }
 
 void Engine::update()
@@ -53,6 +50,7 @@ void Engine::update()
 
 	camera->update(window, airplane.body.position);
 	terrain.update(airplane.body.position);
+	clouds.update(airplane.body.position, terrain);
 }
 
 void Engine::render()
@@ -69,18 +67,7 @@ void Engine::render()
 
 	renderer.drawSkybox();
 
-	
-
-	glm::mat4 scale = glm::scale(glm::vec3(50));
-	int side = 20;
-	float spacing = 1000.f;
-	for (int i = 0; i < side*side; i++)
-	{
-		int x = i % side-side/2;
-		int y = i / side-side/2;
-		renderer.setColor(glm::vec4(1,1,1, 0.7));
-		renderer.draw(cloud, glm::translate(spacing*glm::vec3(x, 0, y))*scale);
-	}
+	renderer.draw(clouds);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 	renderer.draw(vectors);
