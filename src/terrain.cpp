@@ -262,7 +262,7 @@ void Terrain::update(glm::vec3 pos)
 
 void Terrain::draw(Renderer & renderer)
 {
-	renderer.setColor(glm::vec4(0, 0.222353, 0.0170588, 1));
+	renderer.setColor(glm::vec4(0.00392157, 0.556863, 0.054902, 1));
 	for (auto & map_e : chunks)
 	{
 		Chunk* chunk = map_e.second;

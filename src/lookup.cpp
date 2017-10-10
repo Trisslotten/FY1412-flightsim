@@ -5,48 +5,79 @@
 #include <sstream>
 #include <math.h>
 #include <algorithm>
+#include <glm/glm.hpp>
 
-float lerp(float v0, float v1, float t) 
+double lerp(double v0, double v1, double t)
 {
-	return (1 - t) * v0 + t * v1;
+	return (1.0 - t) * v0 + t * v1;
 }
 
 wingData LookUpTable::interpolatedAngleData(double ang, int array1, int array2, double q)
 {
-	wingData data;
-	double angmod, rest;
-	rest = fmod(ang, 0.25);
-	angmod = ang - rest;
-	double angnext = std::max(angmod + 0.25,end_ang[array2]);
+	wingData data{0,0,0};
+	
+	if (ang >= end_ang[array1] || ang >= end_ang[array2] || ang <= start_ang[array1] || ang <= start_ang[array2])
+		return data;
+	
+	int next1 = 1;
+	// could probably do binary search here meh
+	for (int i = 1; i < tables[array1].size(); i++)
+	{
+		if (tables[array1][i].ang > ang)
+		{
+			next1 = i;
+			break;
+		}
+	}
+	double next = tables[array1][next1].ang;
+	double prev = tables[array1][next1 - 1].ang;
+	double t1 = (ang - prev) / (next - prev);
 
-	std::cout << "angle: " << ang << " mod 0.25 = " << angmod << "next = " << angnext << std::endl;
 
-	//angle increments for table1
-	int angIt11 = (angmod - start_ang[array1]) * 4;
-	int angIt12 = (angnext - start_ang[array1]) * 4;
+	int next2 = 1;
+	for (int i = 1; i < tables[array2].size(); i++)
+	{
+		if (tables[array2][i].ang > ang)
+		{
+			next2 = i;
+			break;
+		}
+	}
+	next = tables[array2][next2].ang;
+	prev = tables[array2][next2 - 1].ang;
+	double t2 = (ang - prev) / (next - prev);
 
-	//angle increments for table2
-	int angIt21 = (angmod - start_ang[array2]) * 4;
-	int angIt22 = (angnext - start_ang[array2]) * 4;
 
 	//11 = table 1 angle 1, 12 = table 1 angle 2 ... etc.
-	wingData data11, data12, data21, data22;
-	data11 = tables[array1][angIt11];
-	data12 = tables[array1][angIt12];
+	int index11 = next1-1;
+	int index12 = next1;
 
-	data21 = tables[array2][angIt21];
-	data22 = tables[array2][angIt22];
+	int index21 = next2-1;
+	int index22 = next2;
+
+
+	wingData data11, data12, data21, data22;
+	data11 = tables[array1][index11];
+	data12 = data11;
+	if (index12 < tables[array1].size())
+		data12 = tables[array1][index12];
+		
+
+	data21 = tables[array2][index21];
+	data22 = data21;
+	if(index22 < tables[array2].size())
+		data22 = tables[array2][index22];
 
 	//lerp cl and cd from both angles for both tables
-	double cl1 = lerp(data11.cl, data12.cl, rest);
-	double cd1 = lerp(data11.cd, data12.cd, rest);
+	double cl1 = lerp(data11.cl, data12.cl, t1);
+	double cd1 = lerp(data11.cd, data12.cd, t1);
 
-	double cl2 = lerp(data21.cl, data22.cl, rest);
-	double cd2 = lerp(data21.cd, data22.cd, rest);
+	double cl2 = lerp(data21.cl, data22.cl, t2);
+	double cd2 = lerp(data21.cd, data22.cd, t2);
 
 	//lerp from both tables
-	data.cl = lerp(cl1, cl2, q);
-	data.cd = lerp(cd1, cd2, q);
+	data.cl = lerp(cl1, cl2, 0);
+	data.cd = lerp(cd1, cd2, 0);
 	return data;
 }
 
@@ -70,14 +101,24 @@ LookUpTable::LookUpTable(std::string filepath[5])
 
 			wingData temp;
 			iss >> ang >> temp.cl >> temp.cd;
+			temp.ang = ang;
 			if (first)
-				firstAng = ang; first = false;
+			{
+				firstAng = ang; 
+				first = false;
+			}
+				
 			//std::cout << "angle: " << ang << ", at index [" << it <<"],  cl: " << temp.cl << ", cd: " << temp.cd << std::endl;
 
 			tables[i].emplace_back(temp);
 			it++;
 		}
-		start_ang[i] = firstAng; end_ang[i] = ang;
+		start_ang[i] = firstAng; 
+		end_ang[i] = ang;
+
+		
+
+		t.close();
 	}
 }
 
@@ -127,6 +168,62 @@ wingData LookUpTable::lookUp(double ang, double Re)
 		int angIt = (angtrunc - start_ang[4]) * 4;
 		data = tables[4][angIt];
 	}
-	std::cout << "angle: " << ang << ", angtranc: " << angtrunc << ", Re: " << Re << ", cl: " << data.cl << ", cd: " << data.cd << std::endl;
+	//std::cout << "angle: " << ang << ", angtranc: " << angtrunc << ", Re: " << Re << ", cl: " << data.cl << ", cd: " << data.cd << std::endl;
 	return data;
+}
+
+double LookUpTable::minAngle(double Re)
+{
+	if (Re < 50000) // Need a way to approximate Cl and Cd between Re ranges and angle intervals. Currently a rough approx of Re ranges and no approx of angle intervals.
+	{
+		return start_ang[0];
+	}
+	else if (Re > 50000 && Re < 100000)
+	{
+		return glm::max(start_ang[0], start_ang[1]);
+	}
+	else if (Re > 100000 && Re < 200000)
+	{
+		return glm::max(start_ang[1], start_ang[2]);
+	}
+	else if (Re > 200000 && Re < 500000)
+	{
+		return glm::max(start_ang[2], start_ang[3]);
+	}
+	else if (Re > 500000 && Re < 1000000)
+	{
+		return glm::max(start_ang[3], start_ang[4]);
+	}
+	else
+	{
+		return start_ang[4];
+	}
+}
+
+double LookUpTable::maxAngle(double Re)
+{
+	if (Re < 50000) // Need a way to approximate Cl and Cd between Re ranges and angle intervals. Currently a rough approx of Re ranges and no approx of angle intervals.
+	{
+		return end_ang[0];
+	}
+	else if (Re > 50000 && Re < 100000)
+	{
+		return glm::min(end_ang[0], end_ang[1]);
+	}
+	else if (Re > 100000 && Re < 200000)
+	{
+		return glm::min(end_ang[1], end_ang[2]);
+	}
+	else if (Re > 200000 && Re < 500000)
+	{
+		return glm::min(end_ang[2], end_ang[3]);
+	}
+	else if (Re > 500000 && Re < 1000000)
+	{
+		return glm::min(end_ang[3], end_ang[4]);
+	}
+	else
+	{
+		return end_ang[4];
+	}
 }

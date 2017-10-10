@@ -5,6 +5,7 @@
 
 struct wingData
 {
+	double ang;
 	double cl;
 	double cd;
 };
@@ -21,4 +22,6 @@ private:
 public:
 	LookUpTable(std::string filepath[5]);
 	wingData lookUp(double ang, double Re);
+	double minAngle(double Re);
+	double maxAngle(double Re);
 };

@@ -23,8 +23,8 @@ void main() {
 		gl_Position = gl_in[i].gl_Position;
 		frag_tex = tex[i];
 
-		frag_normal = normal[i];
-		//frag_normal = calc_normal;
+		//frag_normal = normal[i];
+		frag_normal = calc_normal;
 
 		frag_pos = pos[i];
 		EmitVertex();

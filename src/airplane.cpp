@@ -8,6 +8,7 @@
 using namespace glm;
 
 double density = 1.23;
+double dynamic_viscosity = 0.0000183;
 
 // assume origo is in line
 dvec3 projectOnLine(dvec3 to_project, dvec3 v)
@@ -31,7 +32,7 @@ Airplane::~Airplane()
 void Airplane::init()
 {
 	depth_map = new GLfloat[area_resolution*area_resolution];
-
+	/*
 	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
 	LookUpTable lut(NACA2415paths);
 
@@ -40,6 +41,7 @@ void Airplane::init()
 	lut.lookUp(6.577546546546, 300000);
 	lut.lookUp(6.577, 500000);
 	lut.lookUp(50, 900000);
+	*/
 	buildPlane();
 
 	genInertiaTensor();
@@ -69,12 +71,15 @@ void Airplane::buildPlane()
 	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
 	LookUpTable* lut = new LookUpTable(NACA2415paths);
 
-	wings.emplace_back(wing, l_wing_t, lut, 2);
-	wings.emplace_back(wing, r_wing_t, lut, 2);
+	std::string HT12paths[] = { "HT12 R50.txt", "HT12 R100.txt","HT12 R200.txt" ,"HT12 R500.txt" ,"HT12 R1000.txt" };
+	LookUpTable* back_lut = new LookUpTable(HT12paths);
 
-	wings.emplace_back(wing, l_hori_t, lut, -2);
-	wings.emplace_back(wing, r_hori_t, lut, -2);
-	wings.emplace_back(wing, vert_t);
+	wings.emplace_back(wing, l_wing_t, lut);
+	wings.emplace_back(wing, r_wing_t, lut);
+
+	wings.emplace_back(wing, l_hori_t, back_lut);
+	wings.emplace_back(wing, r_hori_t, back_lut);
+	wings.emplace_back(wing, vert_t, back_lut);
 
 	body.setMass(3000);
 	body.position = dvec3(-600, 1000, 0);
@@ -87,7 +92,9 @@ void Airplane::calcLift(Wing & wing)
 	dvec3 diag1 = wing.transform*dvec4(0.5, 0, 0.5, 0);
 	dvec3 diag2 = wing.transform*dvec4(-0.5, 0, 0.5, 0);
 	dvec3 half_wing_length = wing.transform*dvec4(0, 0, 0.5, 0);
+	dvec3 half_wing_chord = wing.transform*dvec4(0.5, 0, 0, 0);
 	double area = 2 * length(cross(diag1, diag2));
+	double chord_length = 2 * length(half_wing_chord);
 	double wing_length = 2 * length(half_wing_length);
 
 	// wing local space base vectors in world
@@ -109,37 +116,45 @@ void Airplane::calcLift(Wing & wing)
 		angle_of_attack = degrees(radians);
 		if (dot(alpha_vel, ey) > 0)
 			angle_of_attack *= -1;
-	}
 
-	double v = length(vel);
-	double Cla = 0.3;//two_pi<float>();
-	double Cl = Cla * angle_of_attack + wing.Cl0;
-	//använd wing.table.lookUp(angle of attack,Reynolds tal) här.
+		double v = length(vel);
+		double Re = density*chord_length*v / dynamic_viscosity;
+		Re = 400000;
 
-
-
-	double lift = 0;
-	if (angle_of_attack > -20 && angle_of_attack < 20)
-	{
-		lift = 0.5*density*v*v*area*Cl;
-
-		double induced_drag = 2.0*lift*lift / (density * v * v * glm::pi<double>() * wing_length * wing_length);
-
-		dvec3 lift_dir = ey - dot(alpha_vel, ey)*alpha_vel / dot(alpha_vel, alpha_vel);
-		if (length(lift_dir) > epsilon<double>())
+		double min_ang = wing.table->minAngle(Re);
+		double max_ang = wing.table->maxAngle(Re);
+		/*
+		std::cout << "Min aot: " << min_ang << "\n";
+		std::cout << "Max aot: " << max_ang << "\n";
+		std::cout << "aot: " << angle_of_attack << "\n";
+		std::cout << "\n";
+		*/
+		if (angle_of_attack > min_ang && angle_of_attack < max_ang)
 		{
-			lift_dir = normalize(lift_dir);
-			body.applyForce(lift*lift_dir, wing_pos);
-		}
-		if (v > epsilon<double>())
-			//body.applyForce(-induced_drag*normalize(vel), wing_pos);
+			wingData data = wing.table->lookUp(angle_of_attack, Re);
 
-		wing.stalling = false;
+			double lift = 0.5*density*v*v*area*data.cl;
+
+			double drag = 0.5*density*v*v*area*data.cd;
+
+			dvec3 lift_dir = ey - dot(alpha_vel, ey)*alpha_vel / dot(alpha_vel, alpha_vel);
+			if (length(lift_dir) > epsilon<double>())
+			{
+				lift_dir = normalize(lift_dir);
+				body.applyForce(lift*lift_dir, wing_pos);
+			}
+			if (v > epsilon<double>())
+				body.applyForce(-drag*normalize(vel), wing_pos);
+
+			wing.stalling = false;
+		}
+		else
+		{
+			wing.stalling = true;
+		}
 	}
-	else
-	{
-		wing.stalling = true;
-	}
+
+	
 
 	// DEBUG
 	//engine.getVectors().addVector(wing_pos, alpha_vel, dvec3(1, 0, 0));
@@ -237,6 +252,8 @@ void Airplane::update(double dt, Engine& engine)
 	body.update(dt);
 
 	Window& w = engine.getWindow();
+
+	/*
 	double elevator  = 2;
 	double hori_cl0 = 0;
 
@@ -274,15 +291,6 @@ void Airplane::update(double dt, Engine& engine)
 		wings[1].Cl0 = wing_cl0;
 	}
 
-	if (w.keyDown(GLFW_KEY_LEFT_SHIFT)) {
-		throttle += 1.f / 240.f;
-	}
-	if (w.keyDown(GLFW_KEY_LEFT_CONTROL)) {
-		throttle -= 1.f / 240.f;
-	}
-
-	throttle = clamp(throttle, 0.f, 1.f);
-
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
 		int axises;
 		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axises);
@@ -303,7 +311,20 @@ void Airplane::update(double dt, Engine& engine)
 			wings[3].Cl0 = hori_cl0 - (elevator * axis[1]);
 		}
 	}
-	
+	*/
+
+
+	if (w.keyDown(GLFW_KEY_LEFT_SHIFT))
+	{
+		throttle += 1.f / 240.f;
+	}
+	if (w.keyDown(GLFW_KEY_LEFT_CONTROL))
+	{
+		throttle -= 1.f / 240.f;
+	}
+
+	throttle = clamp(throttle, 0.f, 1.f);
+
 
 	for (auto& wing : wings)
 	{
@@ -325,9 +346,9 @@ void Airplane::update(double dt, Engine& engine)
 	
 
 	std::string pos_text = "Position: (";
-	pos_text += std::to_string((int)body.position.y);
-	pos_text += ", " + std::to_string((int)body.position.y);
-	pos_text += ", " + std::to_string((int)body.position.z) + ")";
+	pos_text +=        std::to_string(body.position.x);
+	pos_text += ", " + std::to_string(body.position.y);
+	pos_text += ", " + std::to_string(body.position.z) + ")";
 	engine.getTexts().addText(0,0, pos_text);
 	
 	/*
