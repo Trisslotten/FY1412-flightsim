@@ -238,6 +238,7 @@ void Airplane::update(double dt, Engine& engine)
 	Window& w = engine.getWindow();
 	double elevator  = 2;
 	double hori_cl0 = 0;
+
 	if (w.keyDown(GLFW_KEY_S))
 	{
 		wings[2].Cl0 = hori_cl0 - elevator;
@@ -272,6 +273,35 @@ void Airplane::update(double dt, Engine& engine)
 		wings[1].Cl0 = wing_cl0;
 	}
 
+	if (w.keyDown(GLFW_KEY_LEFT_SHIFT)) {
+		throttle += 1.f / 240.f;
+	}
+	if (w.keyDown(GLFW_KEY_LEFT_CONTROL)) {
+		throttle -= 1.f / 240.f;
+	}
+
+	throttle = clamp(throttle, 0.f, 1.f);
+
+	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+		int axises;
+		const float* axis = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axises);
+		//std::cout << "Roll: " << axis[0] << std::endl;
+		//std::cout << "Pitch: " << axis[1] << std::endl;
+		//std::cout << "Turn: " << axis[2] << std::endl;
+
+		//throttle = 1.f-((axis[3] + 1.f)/2);
+
+		std::cout << "Throttle: " << throttle << std::endl;
+
+		if (abs(axis[0]) > 0.1f) {
+			wings[0].Cl0 = wing_cl0 + (ailerons * axis[0]);
+			wings[1].Cl0 = wing_cl0 - (ailerons * axis[0]);
+		}
+		if (abs(axis[1]) > 0.1f) {
+			wings[2].Cl0 = hori_cl0 - (elevator * axis[1]);
+			wings[3].Cl0 = hori_cl0 - (elevator * axis[1]);
+		}
+	}
 	
 
 	for (auto& wing : wings)
@@ -281,7 +311,8 @@ void Airplane::update(double dt, Engine& engine)
 	calcDrag();
 
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
-	//body.applyForce(600000.0*forward, body.position);
+
+	body.applyForce(throttle*600000.0*forward, body.position);
 
 	body.applyForce(dvec3(0, -9.82*body.mass, 0), body.position);
 

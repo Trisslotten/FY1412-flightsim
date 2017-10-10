@@ -74,4 +74,6 @@ public:
 	void update(double dt, Engine& engine);
 
 	virtual void draw(Renderer& renderer);
+
+	float throttle = 0.f;
 };
