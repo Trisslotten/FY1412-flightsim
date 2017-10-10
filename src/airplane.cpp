@@ -36,10 +36,10 @@ void Airplane::init()
 	LookUpTable lut(NACA2415paths);
 
 	lut.lookUp(6.577, 40000);
-	lut.lookUp(6.577, 120000);
-	lut.lookUp(6.577, 340000);
-	lut.lookUp(6.577, 360000);
-	lut.lookUp(6.577, 900000);
+	lut.lookUp(6.577654654645, 75000);
+	lut.lookUp(6.577546546546, 300000);
+	lut.lookUp(6.577, 500000);
+	lut.lookUp(50, 900000);
 	buildPlane();
 
 	genInertiaTensor();
@@ -114,7 +114,8 @@ void Airplane::calcLift(Wing & wing)
 	double v = length(vel);
 	double Cla = 0.3;//two_pi<float>();
 	double Cl = Cla * angle_of_attack + wing.Cl0;
-	//använd wing.table.lookUp(angle of attack,Reynolds tal) här. Returnar en struct med -2,-2 för cl och cd om odef. för specifierad angle.
+	//använd wing.table.lookUp(angle of attack,Reynolds tal) här.
+
 
 
 	double lift = 0;
