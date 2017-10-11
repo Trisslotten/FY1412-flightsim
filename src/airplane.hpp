@@ -6,23 +6,26 @@
 #include "body.hpp"
 #include "renderer.hpp"
 #include "lookup.hpp"
+#include "keybind.hpp"
 
 class Engine;
 
 struct Wing
 {
 	Wing(std::shared_ptr<Model> _model,
-			 glm::mat4 _transform, LookUpTable* _table)
+			 glm::mat4 _transform, std::shared_ptr<LookUpTable> _table, std::shared_ptr<Keybind> _keybind = nullptr)
 	{
 		model = _model;
 		transform = _transform;
 		stalling = false;
 		table = _table;
+		keybind = _keybind;
 	}
 	std::shared_ptr<Model> model;
 	glm::dmat4 transform;
 	bool stalling;
-	LookUpTable* table;
+	std::shared_ptr<LookUpTable> table;
+	std::shared_ptr<Keybind> keybind;
 };
 
 struct Fuselage
@@ -47,6 +50,7 @@ class Airplane : public Drawable
 	std::vector<Fuselage> fuselage_parts;
 	std::vector<Wing> wings;
 
+	std::unordered_map<std::string, std::shared_ptr<Keybind>> keybinds;
 
 	void buildPlane();
 

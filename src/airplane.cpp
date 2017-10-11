@@ -53,14 +53,26 @@ void Airplane::buildPlane()
 	std::shared_ptr<Model> fuselage = std::make_shared<Model>();
 	wing->load("wing.obj");
 	fuselage->load("cylinder.obj");
-
 	wing->uploadToGPU();
 	fuselage->uploadToGPU();
+
+
+	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
+	std::shared_ptr<LookUpTable> lut = std::make_shared<LookUpTable>(NACA2415paths);
+	std::string HT12paths[] = { "HT12 R50.txt", "HT12 R100.txt","HT12 R200.txt" ,"HT12 R500.txt" ,"HT12 R1000.txt" };
+	std::shared_ptr<LookUpTable> back_lut = std::make_shared<LookUpTable>(HT12paths);
+
+
+	keybinds["l_aileron"] = std::make_shared<Keybind>(GLFW_KEY_A, GLFW_KEY_D, 0.2);
+	keybinds["r_aileron"] = std::make_shared<Keybind>(GLFW_KEY_D, GLFW_KEY_A, 0.2);
+
+	keybinds["elevator"] = std::make_shared<Keybind>(GLFW_KEY_S, GLFW_KEY_W, 0.2);
+
 
 	dmat4 fuselage_t = scale(dvec3(8, 1, 1));
 
 	dmat4 l_wing_t = translate(dvec3(-1, 0, -4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
-	dmat4 r_wing_t = translate(dvec3(-1, 0, 4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
+	dmat4 r_wing_t = translate(dvec3(-1, 0, 4))*rotate(-0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
 
 	dmat4 l_hori_t = translate(dvec3(-7, 1, -2))*scale(dvec3(1, 1, 2));
 	dmat4 r_hori_t = translate(dvec3(-7, 1, 2))*scale(dvec3(1, 1, 2));
@@ -68,17 +80,11 @@ void Airplane::buildPlane()
 
 	fuselage_parts.emplace_back(fuselage, fuselage_t);
 
-	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
-	LookUpTable* lut = new LookUpTable(NACA2415paths);
+	wings.emplace_back(wing, l_wing_t, lut, keybinds["l_aileron"]);
+	wings.emplace_back(wing, r_wing_t, lut, keybinds["r_aileron"]);
 
-	std::string HT12paths[] = { "HT12 R50.txt", "HT12 R100.txt","HT12 R200.txt" ,"HT12 R500.txt" ,"HT12 R1000.txt" };
-	LookUpTable* back_lut = new LookUpTable(HT12paths);
-
-	wings.emplace_back(wing, l_wing_t, lut);
-	wings.emplace_back(wing, r_wing_t, lut);
-
-	wings.emplace_back(wing, l_hori_t, back_lut);
-	wings.emplace_back(wing, r_hori_t, back_lut);
+	wings.emplace_back(wing, l_hori_t, back_lut, keybinds["elevator"]);
+	wings.emplace_back(wing, r_hori_t, back_lut, keybinds["elevator"]);
 	wings.emplace_back(wing, vert_t, back_lut);
 
 	body.setMass(3000);
@@ -89,10 +95,10 @@ void Airplane::calcLift(Wing & wing)
 {
 	dmat4 world_trans = body.getTransform()*wing.transform;
 
-	dvec3 diag1 = wing.transform*dvec4(0.5, 0, 0.5, 0);
-	dvec3 diag2 = wing.transform*dvec4(-0.5, 0, 0.5, 0);
-	dvec3 half_wing_length = wing.transform*dvec4(0, 0, 0.5, 0);
-	dvec3 half_wing_chord = wing.transform*dvec4(0.5, 0, 0, 0);
+	dvec3 diag1 = wing.transform*dvec4(1, 0, 1, 0);
+	dvec3 diag2 = wing.transform*dvec4(-1, 0, 1, 0);
+	dvec3 half_wing_length = wing.transform*dvec4(0, 0, 1, 0);
+	dvec3 half_wing_chord = wing.transform*dvec4(1, 0, 0, 0);
 	double area = 2 * length(cross(diag1, diag2));
 	double chord_length = 2 * length(half_wing_chord);
 	double wing_length = 2 * length(half_wing_length);
@@ -120,6 +126,7 @@ void Airplane::calcLift(Wing & wing)
 		double v = length(vel);
 		double Re = density*chord_length*v / dynamic_viscosity;
 		Re = 400000;
+		//std::cout << "Re: " << Re << "\n";
 
 		double min_ang = wing.table->minAngle(Re);
 		double max_ang = wing.table->maxAngle(Re);
@@ -133,18 +140,27 @@ void Airplane::calcLift(Wing & wing)
 		{
 			wingData data = wing.table->lookUp(angle_of_attack, Re);
 
-			double lift = 0.5*density*v*v*area*data.cl;
+			double Cl = data.cl;
+			if (wing.keybind)
+			{
+				Cl += wing.keybind->getValue();
+				std::cout << wing.keybind->getValue() << "\n";
+			}
+				
+			double lift = 0.5*density*v*v*area*Cl;
 
 			double drag = 0.5*density*v*v*area*data.cd;
+
+			dvec3 center_of_pressure = wing_pos + dvec3(body.getTransform()*dvec4(0.5*half_wing_chord, 0));
 
 			dvec3 lift_dir = ey - dot(alpha_vel, ey)*alpha_vel / dot(alpha_vel, alpha_vel);
 			if (length(lift_dir) > epsilon<double>())
 			{
 				lift_dir = normalize(lift_dir);
-				body.applyForce(lift*lift_dir, wing_pos);
+				body.applyForce(lift*lift_dir, center_of_pressure);
 			}
 			if (v > epsilon<double>())
-				body.applyForce(-drag*normalize(vel), wing_pos);
+				body.applyForce(-drag*normalize(vel), center_of_pressure);
 
 			wing.stalling = false;
 		}
@@ -252,44 +268,9 @@ void Airplane::update(double dt, Engine& engine)
 	body.update(dt);
 
 	Window& w = engine.getWindow();
+	for (auto&& map_elem : keybinds)
+		map_elem.second->update(w);
 
-	/*
-	double elevator  = 2;
-	double hori_cl0 = 0;
-
-	if (w.keyDown(GLFW_KEY_S))
-	{
-		wings[2].Cl0 = hori_cl0 - elevator;
-		wings[3].Cl0 = hori_cl0 - elevator;
-	}
-	else if (w.keyDown(GLFW_KEY_W))
-	{
-		wings[2].Cl0 = hori_cl0 + elevator;
-		wings[3].Cl0 = hori_cl0 + elevator;
-	}
-	else
-	{
-		wings[2].Cl0 = hori_cl0;
-		wings[3].Cl0 = hori_cl0;
-	}
-
-	double ailerons = 0.5;
-	double wing_cl0 = 0;
-	if (w.keyDown(GLFW_KEY_A))
-	{
-		wings[0].Cl0 = wing_cl0 - ailerons;
-		wings[1].Cl0 = wing_cl0 + ailerons;
-	}
-	else if (w.keyDown(GLFW_KEY_D))
-	{
-		wings[0].Cl0 = wing_cl0 + ailerons;
-		wings[1].Cl0 = wing_cl0 - ailerons;
-	}
-	else
-	{
-		wings[0].Cl0 = wing_cl0;
-		wings[1].Cl0 = wing_cl0;
-	}
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
 		int axises;
@@ -298,20 +279,20 @@ void Airplane::update(double dt, Engine& engine)
 		//std::cout << "Pitch: " << axis[1] << std::endl;
 		//std::cout << "Turn: " << axis[2] << std::endl;
 
-		//throttle = 1.f-((axis[3] + 1.f)/2);
+		throttle = 1.f-((axis[2] + 1.f)/2);
 
 		std::cout << "Throttle: " << throttle << std::endl;
+		//std::cout << "axis[3]: " << axis[2] << std::endl;
 
 		if (abs(axis[0]) > 0.1f) {
-			wings[0].Cl0 = wing_cl0 + (ailerons * axis[0]);
-			wings[1].Cl0 = wing_cl0 - (ailerons * axis[0]);
+			keybinds["l_aileron"]->set(axis[0]);
+			keybinds["r_aileron"]->set(-axis[0]);
 		}
 		if (abs(axis[1]) > 0.1f) {
-			wings[2].Cl0 = hori_cl0 - (elevator * axis[1]);
-			wings[3].Cl0 = hori_cl0 - (elevator * axis[1]);
+			keybinds["elevator"]->set(-axis[1]);
 		}
 	}
-	*/
+	
 
 
 	if (w.keyDown(GLFW_KEY_LEFT_SHIFT))
@@ -369,6 +350,7 @@ void Airplane::update(double dt, Engine& engine)
 
 void Airplane::draw(Renderer & renderer)
 {
+	renderer.setColor(glm::vec4(0.8, 0.8, 0.8, 1));
 	for (auto&& part : fuselage_parts)
 		renderer.draw(*part.model, mat4(body.getTransform()*part.transform));
 	for (auto&& wing : wings)

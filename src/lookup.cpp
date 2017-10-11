@@ -76,8 +76,8 @@ wingData LookUpTable::interpolatedAngleData(double ang, int array1, int array2, 
 	double cd2 = lerp(data21.cd, data22.cd, t2);
 
 	//lerp from both tables
-	data.cl = lerp(cl1, cl2, 0);
-	data.cd = lerp(cd1, cd2, 0);
+	data.cl = lerp(cl1, cl2, q);
+	data.cd = lerp(cd1, cd2, q);
 	return data;
 }
 
@@ -145,22 +145,22 @@ wingData LookUpTable::lookUp(double ang, double Re)
 	}
 	else if (Re > 50000 && Re < 100000)
 	{
-		double q = fmod(Re,50000) / 50000;
+		double q = (Re - 50000) / (100000 - 50000);
 		data = interpolatedAngleData(ang, 0, 1, q);
 	}
 	else if (Re > 100000 && Re < 200000)
 	{
-		double q = fmod(Re, 100000) / 100000;
+		double q = (Re - 100000) / (200000 - 100000);
 		data = interpolatedAngleData(ang, 1, 2, q);
 	}
 	else if (Re > 200000 && Re < 500000)
 	{
-		double q = fmod(Re, 200000) / 300000;
+		double q = (Re - 200000) / (500000 - 200000);
 		data = interpolatedAngleData(ang, 2, 3, q);
 	}
 	else if (Re > 500000 && Re < 1000000)
 	{
-		double q = fmod(Re, 500000) / 500000;
+		double q = (Re - 500000) / (1000000 - 500000);
 		data = interpolatedAngleData(ang, 3, 4, q);
 	}
 	else
