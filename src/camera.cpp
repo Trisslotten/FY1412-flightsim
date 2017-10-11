@@ -9,31 +9,34 @@
 
 #include <iostream>
 
-void Camera::update(Window& window, glm::vec3 _follow_pos)
+void Camera::update(Window& window, glm::dmat4 plane_trans)
 {
-	float scroll = window.getScroll();
+	double scroll = window.getScroll();
 	zoom -= scroll;
 	zoom = glm::max(zoom, 1.f);
-	follow_pos = _follow_pos;
+	
+	//follow_pos = _follow_pos;
+
+
+
 	glm::vec2 delta = window.mouseMovement();
 
 	pitch -= delta.y * 0.008;
 	yaw -= delta.x * 0.008;
-	pitch = glm::clamp(pitch, -glm::half_pi<float>()+0.01f, glm::half_pi<float>()-0.01f);
+	pitch = glm::clamp(pitch, -glm::half_pi<double>()+0.1, glm::half_pi<double>()-0.1);
 
 
-	glm::mat4 pitch_transform = glm::rotate(glm::mat4(), pitch, glm::vec3(0, 0, 1));
-	glm::mat4 yaw_transform = glm::rotate(glm::mat4(), yaw, glm::vec3(0, 1, 0));
+	glm::dmat4 pitch_transform = glm::rotate(glm::dmat4(), pitch, glm::dvec3(0, 0, 1));
+	glm::dmat4 yaw_transform = glm::rotate(glm::dmat4(), yaw, glm::dvec3(0, 1, 0));
 
-	glm::vec4 look_vec(1, 0, 0, 0);
-	look_vec = yaw_transform*pitch_transform*look_vec;
-
-	pos = follow_pos - glm::vec3(look_vec)*zoom;
+	glm::vec3 look_vec = plane_trans*yaw_transform*pitch_transform*glm::vec4(zoom*glm::vec3(-1, 0, 0), 1);
+	glm::vec3 up = plane_trans*glm::dvec4(glm::vec3(0, 1, 0), 0);
+	glm::vec3 plane_pos = plane_trans*glm::dvec4(glm::vec3(0, 0, 0), 1);
 
 	view = glm::lookAt(
-		pos,
-		follow_pos,
-		glm::vec3(0, 1, 0)
+		look_vec,
+		plane_pos,
+		up
 	);
 }
 	

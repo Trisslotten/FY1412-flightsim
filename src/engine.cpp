@@ -31,7 +31,7 @@ void Engine::init()
 
 void Engine::update()
 {
-	double frame_time = 1 / 144.0;
+	double frame_time = 0.5 / 144.0;
 	double timescale = 1;
 	double dt = timer.restart();
 	if(dt < 1)
@@ -41,6 +41,7 @@ void Engine::update()
 	{
 		vectors.clear();
 		texts.clear();
+
 		// update physics
 
 		glClearColor(0, 0, 0, 1);
@@ -50,7 +51,7 @@ void Engine::update()
 		frame_accum -= frame_time;
 	}
 
-	camera->update(window, airplane.body.position);
+	camera->update(window, airplane.body.getTransform());
 	terrain.update(airplane.body.position);
 	clouds.update(airplane.body.position, terrain);
 }

@@ -71,8 +71,8 @@ void Airplane::buildPlane()
 
 	dmat4 fuselage_t = scale(dvec3(8, 1, 1));
 
-	dmat4 l_wing_t = translate(dvec3(-1, 0, -4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
-	dmat4 r_wing_t = translate(dvec3(-1, 0, 4))*rotate(-0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
+	dmat4 l_wing_t = translate(dvec3(-3, 0, -4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
+	dmat4 r_wing_t = translate(dvec3(-3, 0, 4))*rotate(-0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
 
 	dmat4 l_hori_t = translate(dvec3(-7, 1, -2))*scale(dvec3(1, 1, 2));
 	dmat4 r_hori_t = translate(dvec3(-7, 1, 2))*scale(dvec3(1, 1, 2));
