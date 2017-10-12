@@ -101,7 +101,7 @@ void Airplane::buildPlane()
 	wings.emplace_back(wing, r_hori_t, lut, keybinds["elevator"]);
 	wings.emplace_back(wing, vert_t, back_lut);
 
-	body.setMass(5000);
+	body.setMass(1000);
 	body.position = dvec3(-600, 1000, 0);
 
 	engines.push_back(new PropEngine());
@@ -367,6 +367,7 @@ void Airplane::update(double dt, Engine& engine)
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
 
 	double engines_force = 0.0;
+	std::cout << glm::length(body.velocityAt(body.position)) << std::endl;
 	for (int i = 0; i < engines.size(); i++) {
 		engines_force += (double)engines.at(i)->calcPower(glm::length(body.velocityAt(body.position)), throttle);
 	}
