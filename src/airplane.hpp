@@ -61,10 +61,9 @@ struct Fuselage
 
 class Airplane : public Drawable
 {
-
 	ShaderProgram shader;
-	GLfloat* depth_map;
-	int area_resolution = 100;
+	GLuint* depth_map;
+	int area_resolution = 20;
 
 	std::vector<Fuselage> fuselage_parts;
 	std::vector<Wing> wings;

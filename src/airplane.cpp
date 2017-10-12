@@ -33,7 +33,7 @@ Airplane::~Airplane()
 
 void Airplane::init()
 {
-	depth_map = new GLfloat[area_resolution*area_resolution];
+	depth_map = new GLuint[area_resolution*area_resolution];
 	/*
 	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
 	LookUpTable lut(NACA2415paths);
@@ -70,7 +70,6 @@ void Airplane::buildPlane()
 
 	keybinds["elevator"] = std::make_shared<Keybind>(GLFW_KEY_S, GLFW_KEY_W, glm::radians(lut->maxAngle(0)));
 
-
 	dmat4 fuselage_t = scale(dvec3(8, 1, 1));
 
 	WingTransform l_wing_t(translate(dvec3(-3, 0, -4))*rotate(0.0, dvec3(1, 0, 0)),
@@ -78,10 +77,10 @@ void Airplane::buildPlane()
 	WingTransform r_wing_t(translate(dvec3(-3, 0, 4))*rotate(-0.0, dvec3(1, 0, 0)),
 						   scale(dvec3(1, 1, 4)));
 
-	WingTransform l_aileron_t(translate(dvec3(-4.2, 0, -7))*rotate(0.0, dvec3(1, 0, 0)),
-							  scale(dvec3(0.2, 0.1, 1)));
-	WingTransform r_aileron_t(translate(dvec3(-4.2, 0, 7))*rotate(0.0, dvec3(1, 0, 0)),
-							  scale(dvec3(0.2, 0.1, 1)));
+	WingTransform l_aileron_t(translate(dvec3(-4.2, 0, -6))*rotate(0.0, dvec3(1, 0, 0)),
+							  scale(dvec3(0.2, 0.1, 2)));
+	WingTransform r_aileron_t(translate(dvec3(-4.2, 0, 6))*rotate(0.0, dvec3(1, 0, 0)),
+							  scale(dvec3(0.2, 0.1, 2)));
 
 
 	WingTransform l_hori_t(translate(dvec3(-7, 1, -2)),
@@ -241,9 +240,7 @@ void Airplane::calcDrag()
 		if (wing.stalling)
 			recursiveDraw(wing.model->getRootNode(), mat4(body_transform * wing.transform), shader);
 	}
-
-
-	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_COMPONENT, GL_FLOAT, depth_map);
+	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, depth_map);
 
 	double area = pixel_size*pixel_size;
 
@@ -255,7 +252,10 @@ void Airplane::calcDrag()
 	{
 		for (int xi = 0; xi < resolution; xi++)
 		{
-			float depth = depth_map[xi + yi * resolution];
+			GLuint raw = depth_map[xi + yi * resolution];
+			GLuint shifted = raw >> 8;
+			//GLuint masked = 4095 & shifted;
+			float depth = shifted / 16777215.0;
 			double x = xi;
 			double y = yi;
 			if (depth < 1.f)
@@ -355,7 +355,7 @@ void Airplane::update(double dt, Engine& engine)
 
 	throttle = clamp(throttle, 0.f, 1.f);
 
-	std::cout << "New Update\n";
+	//std::cout << "New Update\n";
 	for (auto& wing : wings)
 	{
 		calcLift(wing);

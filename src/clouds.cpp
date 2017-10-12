@@ -8,6 +8,8 @@ void Clouds::init()
 	cloud.uploadToGPU();
 
 	positions.resize(width*width);
+	noise.SetNoiseType(FastNoise::NoiseType::Cubic);
+	noise.SetFractalOctaves(0);
 }
 
 void Clouds::update(glm::vec3 pos, Terrain& terrain)
