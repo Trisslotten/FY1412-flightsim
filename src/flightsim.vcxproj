@@ -136,6 +136,7 @@
     <ClCompile Include="engine.cpp" />
     <ClCompile Include="FastNoise.cpp" />
     <ClCompile Include="font.cpp" />
+    <ClCompile Include="keybind.cpp" />
     <ClCompile Include="lodepng.cpp" />
     <ClCompile Include="lookup.cpp" />
     <ClCompile Include="main.cpp" />
@@ -157,6 +158,7 @@
     <ClInclude Include="body.hpp" />
     <ClInclude Include="camera.hpp" />
     <ClInclude Include="clouds.hpp" />
+    <ClInclude Include="keybind.hpp" />
     <ClInclude Include="engine.hpp" />
     <ClInclude Include="FastNoise.h" />
     <ClInclude Include="font.hpp" />

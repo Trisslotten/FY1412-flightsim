@@ -93,6 +93,9 @@
     <ClCompile Include="clouds.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="keybind.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine.hpp">
@@ -156,6 +159,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="clouds.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="keybind.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

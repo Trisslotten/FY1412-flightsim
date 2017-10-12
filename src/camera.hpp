@@ -14,17 +14,17 @@ class Camera {
 	glm::mat4 view;
 	
 	// left right
-	GLfloat yaw;
+	double yaw;
 
 	// up down
-	GLfloat pitch;
+	double pitch;
 
 	glm::vec3 pos{ 0,0,0 };
 
 public:
 
 
-	void update(Window& window, glm::vec3 follow_pos);
+	void update(Window& window, glm::dmat4 plane_trans);
 
 	glm::vec3 getPos()
 	{

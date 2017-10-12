@@ -48,7 +48,7 @@ struct Body
 
 	dvec3 velocityAt(dvec3 world_pos);
 
-	void applyForce(dvec3 force, dvec3 world_pos);
+	void applyForce(dvec3 force, dvec3 world_pos, bool draw = true);
 	void applyImpuls(dvec3 impuls, dvec3 world_pos);
 
 	void update(double dt);
