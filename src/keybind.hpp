@@ -2,12 +2,14 @@
 
 
 #include "window.hpp"
+#include <glm/glm.hpp>
 
 class Keybind
 {
 
 	int key1, key2;
 	double change;
+
 
 	double value = 0;
 public:

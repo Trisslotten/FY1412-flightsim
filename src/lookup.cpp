@@ -23,9 +23,9 @@ wingData LookUpTable::interpolatedAngleData(double ang, int array1, int array2, 
 	// could probably do binary search here meh
 	for (int i = 1; i < tables[array1].size(); i++)
 	{
+		next1 = i;
 		if (tables[array1][i].ang > ang)
 		{
-			next1 = i;
 			break;
 		}
 	}
@@ -37,9 +37,9 @@ wingData LookUpTable::interpolatedAngleData(double ang, int array1, int array2, 
 	int next2 = 1;
 	for (int i = 1; i < tables[array2].size(); i++)
 	{
+		next2 = i;
 		if (tables[array2][i].ang > ang)
 		{
-			next2 = i;
 			break;
 		}
 	}
@@ -139,34 +139,31 @@ wingData LookUpTable::lookUp(double ang, double Re)
 
 	if (Re < 50000) // Need a way to approximate Cl and Cd between Re ranges and angle intervals. Currently a rough approx of Re ranges and no approx of angle intervals.
 	{
-		double start = start_ang[0];
-		int angIt = (angtrunc - start_ang[0]) * 4;
-		data = tables[0][angIt];
+		data = interpolatedAngleData(ang, 0, 0, 0);
 	}
-	else if (Re > 50000 && Re < 100000)
+	else if (Re < 100000)
 	{
 		double q = (Re - 50000) / (100000 - 50000);
 		data = interpolatedAngleData(ang, 0, 1, q);
 	}
-	else if (Re > 100000 && Re < 200000)
+	else if (Re < 200000)
 	{
 		double q = (Re - 100000) / (200000 - 100000);
 		data = interpolatedAngleData(ang, 1, 2, q);
 	}
-	else if (Re > 200000 && Re < 500000)
+	else if (Re < 500000)
 	{
 		double q = (Re - 200000) / (500000 - 200000);
 		data = interpolatedAngleData(ang, 2, 3, q);
 	}
-	else if (Re > 500000 && Re < 1000000)
+	else if (Re < 1000000)
 	{
 		double q = (Re - 500000) / (1000000 - 500000);
 		data = interpolatedAngleData(ang, 3, 4, q);
 	}
 	else
 	{
-		int angIt = (angtrunc - start_ang[4]) * 4;
-		data = tables[4][angIt];
+		data = interpolatedAngleData(ang, 4, 4, 0);
 	}
 	//std::cout << "angle: " << ang << ", angtranc: " << angtrunc << ", Re: " << Re << ", cl: " << data.cl << ", cd: " << data.cd << std::endl;
 	return data;
@@ -178,19 +175,19 @@ double LookUpTable::minAngle(double Re)
 	{
 		return start_ang[0];
 	}
-	else if (Re > 50000 && Re < 100000)
+	else if (Re < 100000)
 	{
 		return glm::max(start_ang[0], start_ang[1]);
 	}
-	else if (Re > 100000 && Re < 200000)
+	else if (Re < 200000)
 	{
 		return glm::max(start_ang[1], start_ang[2]);
 	}
-	else if (Re > 200000 && Re < 500000)
+	else if (Re < 500000)
 	{
 		return glm::max(start_ang[2], start_ang[3]);
 	}
-	else if (Re > 500000 && Re < 1000000)
+	else if (Re < 1000000)
 	{
 		return glm::max(start_ang[3], start_ang[4]);
 	}
@@ -206,19 +203,19 @@ double LookUpTable::maxAngle(double Re)
 	{
 		return end_ang[0];
 	}
-	else if (Re > 50000 && Re < 100000)
+	else if (Re < 100000)
 	{
 		return glm::min(end_ang[0], end_ang[1]);
 	}
-	else if (Re > 100000 && Re < 200000)
+	else if (Re < 200000)
 	{
 		return glm::min(end_ang[1], end_ang[2]);
 	}
-	else if (Re > 200000 && Re < 500000)
+	else if (Re < 500000)
 	{
 		return glm::min(end_ang[2], end_ang[3]);
 	}
-	else if (Re > 500000 && Re < 1000000)
+	else if (Re < 1000000)
 	{
 		return glm::min(end_ang[3], end_ang[4]);
 	}

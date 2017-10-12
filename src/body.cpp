@@ -13,11 +13,12 @@ glm::dvec3 Body::velocityAt(glm::dvec3 world_pos)
 	return momentum*inverse_mass + glm::cross(inverse_inertia*angular_momentum, world_pos - position);
 }
 
-void Body::applyForce(glm::dvec3 _force, glm::dvec3 world_pos)
+void Body::applyForce(glm::dvec3 _force, glm::dvec3 world_pos, bool draw)
 {
 	torques -= glm::cross(_force, world_pos - position);
 	forces += _force;
-	applied_forces.emplace_back(world_pos, _force);
+	if(draw)
+		applied_forces.emplace_back(world_pos, _force);
 }
 
 void Body::applyImpuls(glm::dvec3 _impuls, glm::dvec3 world_pos)

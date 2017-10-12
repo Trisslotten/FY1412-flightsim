@@ -10,18 +10,37 @@
 
 class Engine;
 
+
+struct WingTransform
+{
+	WingTransform() {}
+
+	WingTransform(glm::dmat4 _placement,
+				  glm::dmat4 _scale)
+	{
+		placement = _placement;
+		scale = _scale;
+	}
+	glm::dmat4 placement;
+	glm::dmat4 scale;
+};
+
 struct Wing
 {
 	Wing(std::shared_ptr<Model> _model,
-			 glm::mat4 _transform, std::shared_ptr<LookUpTable> _table, std::shared_ptr<Keybind> _keybind = nullptr)
+		 WingTransform _transforms,
+		 std::shared_ptr<LookUpTable> _table, 
+		 std::shared_ptr<Keybind> _keybind = nullptr)
 	{
 		model = _model;
-		transform = _transform;
-		stalling = false;
+		stalling = true;
+		transforms = _transforms;
 		table = _table;
 		keybind = _keybind;
 	}
 	std::shared_ptr<Model> model;
+	WingTransform transforms;
+
 	glm::dmat4 transform;
 	bool stalling;
 	std::shared_ptr<LookUpTable> table;
@@ -31,7 +50,7 @@ struct Wing
 struct Fuselage
 {
 	Fuselage(std::shared_ptr<Model> _model,
-				 glm::mat4 _transform)
+			 glm::mat4 _transform)
 	{
 		model = _model;
 		transform = _transform;

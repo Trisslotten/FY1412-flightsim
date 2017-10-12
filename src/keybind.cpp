@@ -11,7 +11,7 @@ Keybind::Keybind(int _key1, int _key2, double _change)
 
 void Keybind::update(Window & w)
 {
-	double ratio = 0.03;
+	double ratio = 0.01;
 	bool pressed = false;
 	if (w.keyDown(key1))
 	{

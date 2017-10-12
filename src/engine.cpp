@@ -2,8 +2,8 @@
 
 // used to check for when floats become NaN for debugging
 
-//#include <float.h>
-//unsigned int fp_control_state = _controlfp_s(nullptr, _EM_INEXACT, _MCW_EM);
+#include <float.h>
+unsigned int fp_control_state = _controlfp_s(nullptr, _EM_INEXACT, _MCW_EM);
 
 #include <iostream>
 #include <thread>
@@ -31,7 +31,7 @@ void Engine::init()
 
 void Engine::update()
 {
-	double frame_time = 0.5 / 144.0;
+	double frame_time = 0.25 / 144.0;
 	double timescale = 1;
 	double dt = timer.restart();
 	if(dt < 1)

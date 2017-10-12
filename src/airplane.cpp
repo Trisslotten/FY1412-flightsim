@@ -4,9 +4,11 @@
 #include <iostream>
 #include "engine.hpp"
 #include "lookup.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 using namespace glm;
 
+const double EPSILON = 1000000.0 * epsilon<double>();
 double density = 1.23;
 double dynamic_viscosity = 0.0000183;
 
@@ -63,36 +65,59 @@ void Airplane::buildPlane()
 	std::shared_ptr<LookUpTable> back_lut = std::make_shared<LookUpTable>(HT12paths);
 
 
-	keybinds["l_aileron"] = std::make_shared<Keybind>(GLFW_KEY_A, GLFW_KEY_D, 0.2);
-	keybinds["r_aileron"] = std::make_shared<Keybind>(GLFW_KEY_D, GLFW_KEY_A, 0.2);
+	keybinds["l_aileron"] = std::make_shared<Keybind>(GLFW_KEY_A, GLFW_KEY_D, glm::radians(back_lut->maxAngle(0)));
+	keybinds["r_aileron"] = std::make_shared<Keybind>(GLFW_KEY_D, GLFW_KEY_A, glm::radians(back_lut->maxAngle(0)));
 
-	keybinds["elevator"] = std::make_shared<Keybind>(GLFW_KEY_S, GLFW_KEY_W, 0.2);
+	keybinds["elevator"] = std::make_shared<Keybind>(GLFW_KEY_S, GLFW_KEY_W, glm::radians(lut->maxAngle(0)));
 
 
 	dmat4 fuselage_t = scale(dvec3(8, 1, 1));
 
-	dmat4 l_wing_t = translate(dvec3(-3, 0, -4))*rotate(0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
-	dmat4 r_wing_t = translate(dvec3(-3, 0, 4))*rotate(-0.0, dvec3(1, 0, 0))*scale(dvec3(1, 1, 4));
+	WingTransform l_wing_t(translate(dvec3(-3, 0, -4))*rotate(0.0, dvec3(1, 0, 0)),
+						   scale(dvec3(1, 1, 4)));
+	WingTransform r_wing_t(translate(dvec3(-3, 0, 4))*rotate(-0.0, dvec3(1, 0, 0)),
+						   scale(dvec3(1, 1, 4)));
 
-	dmat4 l_hori_t = translate(dvec3(-7, 1, -2))*scale(dvec3(1, 1, 2));
-	dmat4 r_hori_t = translate(dvec3(-7, 1, 2))*scale(dvec3(1, 1, 2));
-	dmat4 vert_t = translate(dvec3(-7, 2, 0))*rotate(half_pi<double>(), dvec3(1, 0, 0))*scale(dvec3(1, 1, 1));
+	WingTransform l_aileron_t(translate(dvec3(-4.2, 0, -7))*rotate(0.0, dvec3(1, 0, 0)),
+							  scale(dvec3(0.2, 0.1, 1)));
+	WingTransform r_aileron_t(translate(dvec3(-4.2, 0, 7))*rotate(0.0, dvec3(1, 0, 0)),
+							  scale(dvec3(0.2, 0.1, 1)));
+
+
+	WingTransform l_hori_t(translate(dvec3(-7, 1, -2)),
+						   scale(dvec3(1, 1, 2)));
+	WingTransform r_hori_t(translate(dvec3(-7, 1, 2)),
+						   scale(dvec3(1, 1, 2)));
+	WingTransform vert_t(translate(dvec3(-7, 3, 0))*rotate(half_pi<double>(), dvec3(1, 0, 0)),
+						 scale(dvec3(1, 1, 2)));
 
 	fuselage_parts.emplace_back(fuselage, fuselage_t);
 
-	wings.emplace_back(wing, l_wing_t, lut, keybinds["l_aileron"]);
-	wings.emplace_back(wing, r_wing_t, lut, keybinds["r_aileron"]);
+	wings.emplace_back(wing, l_wing_t, lut);
+	wings.emplace_back(wing, r_wing_t, lut);
+	wings.emplace_back(wing, l_aileron_t, lut, keybinds["l_aileron"]);
+	wings.emplace_back(wing, r_aileron_t, lut, keybinds["r_aileron"]);
 
-	wings.emplace_back(wing, l_hori_t, back_lut, keybinds["elevator"]);
-	wings.emplace_back(wing, r_hori_t, back_lut, keybinds["elevator"]);
+	wings.emplace_back(wing, l_hori_t, lut, keybinds["elevator"]);
+	wings.emplace_back(wing, r_hori_t, lut, keybinds["elevator"]);
 	wings.emplace_back(wing, vert_t, back_lut);
 
-	body.setMass(3000);
+	body.setMass(5000);
 	body.position = dvec3(-600, 1000, 0);
 }
 
 void Airplane::calcLift(Wing & wing)
 {
+	double angle = 0;
+	dmat4 init_offset, return_offset;
+	if (wing.keybind)
+	{
+		angle = wing.keybind->getValue();
+	}
+	dmat4 rotation = glm::rotate(angle, dvec3(0,0,1));
+	wing.transform = wing.transforms.placement * rotation * wing.transforms.scale;
+
+
 	dmat4 world_trans = body.getTransform()*wing.transform;
 
 	dvec3 diag1 = wing.transform*dvec4(1, 0, 1, 0);
@@ -115,17 +140,19 @@ void Airplane::calcLift(Wing & wing)
 	dvec3 beta_vel = projectToPlane(vel, ez, ex);
 
 	double angle_of_attack = 0;
-	if (length(alpha_vel) > epsilon<double>())
+	if (length(alpha_vel) > EPSILON)
 	{
 		double cosa = dot(normalize(alpha_vel), ex);
-		double radians = std::acos(cosa);
+		double radians = 0;
+		if(cosa < 1.0)
+			radians = glm::acos(cosa);
 		angle_of_attack = degrees(radians);
 		if (dot(alpha_vel, ey) > 0)
 			angle_of_attack *= -1;
 
 		double v = length(vel);
 		double Re = density*chord_length*v / dynamic_viscosity;
-		Re = 400000;
+		Re = 100000;
 		//std::cout << "Re: " << Re << "\n";
 
 		double min_ang = wing.table->minAngle(Re);
@@ -141,25 +168,23 @@ void Airplane::calcLift(Wing & wing)
 			wingData data = wing.table->lookUp(angle_of_attack, Re);
 
 			double Cl = data.cl;
-			if (wing.keybind)
-			{
-				Cl += wing.keybind->getValue();
-				std::cout << wing.keybind->getValue() << "\n";
-			}
+			
 				
 			double lift = 0.5*density*v*v*area*Cl;
+			//std::cout << "alpha: " << angle_of_attack << ", Cl: " << Cl << ", lift: " <<  lift << "\n";
+
 
 			double drag = 0.5*density*v*v*area*data.cd;
 
 			dvec3 center_of_pressure = wing_pos + dvec3(body.getTransform()*dvec4(0.5*half_wing_chord, 0));
 
 			dvec3 lift_dir = ey - dot(alpha_vel, ey)*alpha_vel / dot(alpha_vel, alpha_vel);
-			if (length(lift_dir) > epsilon<double>())
+			if (length(lift_dir) > EPSILON)
 			{
 				lift_dir = normalize(lift_dir);
 				body.applyForce(lift*lift_dir, center_of_pressure);
 			}
-			if (v > epsilon<double>())
+			if (v > EPSILON)
 				body.applyForce(-drag*normalize(vel), center_of_pressure);
 
 			wing.stalling = false;
@@ -192,14 +217,14 @@ void Airplane::calcDrag()
 	dmat4 projection = ortho(-length / 2, length / 2, -length / 2, length / 2, 0.001, length);
 
 	dvec3 vel = body.velocityAt(body.position);
-	if (glm::length(vel) < epsilon<double>())
+	if (glm::length(vel) < EPSILON)
 		return;
 
 	dmat4 body_transform = body.getTransform();
 
 	dvec3 eye = 0.5*length*normalize(vel);
 	dvec3 up = vec3(0, 1, 0);
-	if (glm::length(cross(eye, up)) <= epsilon<double>())
+	if (glm::length(cross(eye, up)) <= EPSILON)
 		up = vec3(1, 0, 0);
 
 	dmat4 view = lookAt(eye + body.position, body.position, up);
@@ -220,6 +245,10 @@ void Airplane::calcDrag()
 
 	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_COMPONENT, GL_FLOAT, depth_map);
 
+	double area = pixel_size*pixel_size;
+
+	glm::dmat4 inverse = glm::inverse(projection * view);
+
 	unsigned int num_pixels = 0;
 	dvec3 accum_pos;
 	for (int yi = 0; yi < resolution; yi++)
@@ -233,31 +262,51 @@ void Airplane::calcDrag()
 			{
 				num_pixels++;
 				dvec3 pos;
-				//pos.x = 2.0 * x / resolution - 1.0;
-				//pos.y = 2.0 * y / resolution - 1.0;
-				//pos.z = 2.0 * depth - 1.0;
-				pos.x = x;
-				pos.y = y;
+				pos.x = x + 0.5;
+				pos.y = y + 0.5;
 				pos.z = depth;
+
+				// TESTING
+				/*
+				double speed = glm::length(body.velocityAt(world));
+				if (speed > epsilon<double>()) 
+				{
+					double CD = 0.1;
+					double drag_magn = 0.5 * density * speed * speed * CD * area;
+					dvec3 drag_force = -drag_magn * normalize(body.velocityAt(world));
+					body.applyForce(drag_force, world, false);
+				}
+				*/
+				// TESTING
+
 				accum_pos += pos;
 			}
 		}
 	}
+	/**/
 	dvec3 drag_center = body.position;
-	double reference_area = 0;
+	double reference_area = pixel_size*pixel_size*num_pixels;
 	if (num_pixels > 0)
 	{
+
 		drag_center = accum_pos / (double)num_pixels;
-		drag_center = unProject(drag_center, view, projection, vec4(0, 0, resolution, resolution));
-		reference_area = pixel_size*pixel_size*num_pixels;
+
+		glm::dvec4 tmp = glm::dvec4(drag_center, 1);
+		tmp.x /= resolution;
+		tmp.y /= resolution;
+		tmp = tmp * 2.0 - 1.0;
+		glm::dvec4 world = inverse*tmp;
+		world /= world.w;
+
+		drag_center = world;
 	}
 
 	double speed = glm::length(body.velocityAt(body.position));
-	if (speed > epsilon<double>())
+	if (speed > EPSILON)
 	{
-		double CD = 1;
+		double CD = 0.1;
 		double drag_magn = 0.5 * density * speed * speed * CD * reference_area;
-		dvec3 drag_force = -drag_magn * normalize(body.velocityAt(body.position));
+		dvec3 drag_force = -drag_magn * normalize(body.velocityAt(drag_center));
 		body.applyForce(drag_force, drag_center);
 	}
 }
@@ -281,15 +330,15 @@ void Airplane::update(double dt, Engine& engine)
 
 		throttle = 1.f-((axis[2] + 1.f)/2);
 
-		std::cout << "Throttle: " << throttle << std::endl;
-		//std::cout << "axis[3]: " << axis[2] << std::endl;
+		//std::cout << "Throttle: " << throttle << std::endl;
+		//std::cout << "axis[2]: " << axis[2] << std::endl;
 
 		if (abs(axis[0]) > 0.1f) {
-			keybinds["l_aileron"]->set(axis[0]);
-			keybinds["r_aileron"]->set(-axis[0]);
+			keybinds["l_aileron"]->set(sign(axis[0]) * axis[0]* axis[0]);
+			keybinds["r_aileron"]->set(-sign(axis[0]) * axis[0] * axis[0]);
 		}
 		if (abs(axis[1]) > 0.1f) {
-			keybinds["elevator"]->set(-axis[1]);
+			keybinds["elevator"]->set(-sign(axis[1]) * axis[1] * axis[1]);
 		}
 	}
 	
@@ -306,7 +355,7 @@ void Airplane::update(double dt, Engine& engine)
 
 	throttle = clamp(throttle, 0.f, 1.f);
 
-
+	std::cout << "New Update\n";
 	for (auto& wing : wings)
 	{
 		calcLift(wing);
@@ -315,7 +364,7 @@ void Airplane::update(double dt, Engine& engine)
 
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
 
-	body.applyForce(throttle*600000.0*forward, body.position);
+	body.applyForce(throttle*100000.0*forward, body.position);
 
 	body.applyForce(dvec3(0, -9.82*body.mass, 0), body.position);
 
@@ -325,13 +374,19 @@ void Airplane::update(double dt, Engine& engine)
 	}
 
 	
-
+	/*
 	std::string pos_text = "Position: (";
 	pos_text +=        std::to_string(body.position.x);
 	pos_text += ", " + std::to_string(body.position.y);
 	pos_text += ", " + std::to_string(body.position.z) + ")";
 	engine.getTexts().addText(0,0, pos_text);
-	
+	*/
+	std::string gs_text = "G: " + std::to_string(glm::length(body.external_forces/(9.82*body.mass))) + " m/s^2";
+	engine.getTexts().addText(0, 16, gs_text);
+
+	std::string speed_text = "Speed: " + std::to_string(glm::length(body.velocityAt(body.position))) + " m/s";
+	engine.getTexts().addText(0, 0, speed_text);
+
 	/*
 	dvec3 v = body.velocityAt(body.position);
 	dvec3 pos = body.position + log(length(v))*normalize(v);
