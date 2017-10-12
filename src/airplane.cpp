@@ -78,8 +78,6 @@ void Airplane::buildPlane()
 
 	body.setMass(3000);
 	body.position = dvec3(-600, 1000, 0);
-	PropEngine* plant = new PropEngine();
-	engines.push_back(plant);
 }
 
 void Airplane::calcLift(Wing & wing)
@@ -293,7 +291,7 @@ void Airplane::update(double dt, Engine& engine)
 
 		//throttle = 1.f-((axis[3] + 1.f)/2);
 
-		//std::cout << "Throttle: " << throttle << std::endl;
+		std::cout << "Throttle: " << throttle << std::endl;
 
 		if (abs(axis[0]) > 0.1f) {
 			wings[0].Cl0 = wing_cl0 + (ailerons * axis[0]);
@@ -312,14 +310,9 @@ void Airplane::update(double dt, Engine& engine)
 	}
 	calcDrag();
 
-	double engines_force = 0.0;
-	for (int i = 0; i < engines.size(); i++) {
-		engines_force += (double)engines.at(i)->calcPower(glm::length(body.momentum)/1000, throttle);
-	}
-
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
-	std::cout << engines_force << std::endl;
-	body.applyForce(1000*engines_force*forward, body.position);
+
+	body.applyForce(throttle*600000.0*forward, body.position);
 
 	body.applyForce(dvec3(0, -9.82*body.mass, 0), body.position);
 
@@ -335,18 +328,6 @@ void Airplane::update(double dt, Engine& engine)
 	pos_text += ", " + std::to_string((int)body.position.y);
 	pos_text += ", " + std::to_string((int)body.position.z) + ")";
 	engine.getTexts().addText(0,0, pos_text);
-
-	std::string throttle_text = "Throttle: ";
-	throttle_text += std::to_string((int)(throttle*100.f)) + "%";
-	engine.getTexts().addText(0, 15, throttle_text);
-
-	std::string speed_text = "Speed: ";
-	speed_text += std::to_string((int)(glm::length(body.momentum)/10000));
-	engine.getTexts().addText(0, 30, speed_text);
-
-	std::string engine_text = "Engine power: ";
-	engine_text += std::to_string((int)engines_force);
-	engine.getTexts().addText(0, 45, engine_text);
 	
 	/*
 	dvec3 v = body.velocityAt(body.position);
