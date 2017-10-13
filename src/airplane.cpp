@@ -366,10 +366,13 @@ void Airplane::update(double dt, Engine& engine)
 
 	dvec3 forward = body.getTransform()*dvec4(1, 0, 0, 0);
 
+
+
 	double engines_force = 0.0;
-	std::cout << glm::length(body.velocityAt(body.position)) << std::endl;
 	for (int i = 0; i < engines.size(); i++) {
-		engines_force += (double)engines.at(i)->calcPower(glm::length(body.velocityAt(body.position)), throttle);
+		engines.at(i)->temp = 285.15f;
+		engines.at(i)->update_conditions(285.15f, body.position.y, glm::length(body.velocityAt(body.position)));
+		engines_force += (double)engines.at(i)->calcPower(throttle);
 	}
 
 	body.applyForce(engines_force*forward, body.position);
@@ -402,6 +405,9 @@ void Airplane::update(double dt, Engine& engine)
 
 	std::string throttle_text = "Throttle: " + std::to_string((int)(throttle * 100.f)) + " %";
 	engine.getTexts().addText(0, 45, throttle_text);
+
+	std::string altitude_dropoff_text = "Altitude dropoff: " + std::to_string((int)(100.f-(engines.at(0)->spec * 100.f))) + " %";
+	engine.getTexts().addText(0, 60, altitude_dropoff_text);
 
 	/*
 	dvec3 v = body.velocityAt(body.position);

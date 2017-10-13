@@ -63,12 +63,27 @@ struct Powerplant {
 	Powerplant() {
 
 	};
-	float calcPower(float velocity);
+	virtual float calcPower(float throttle) { return 0.f; };
+
+	void update_conditions(float temp, float alt, float velocity) {
+		this->temp = temp;
+		this->alt = alt;
+		this->velocity = velocity;
+	}
+
+	//flight conditions
+	float temp = 0.f; // !!!in kelvin!!!
+	float alt = 0.f;
+	float velocity = 0.f;
+
+	float spec = 0.f;
+
+	//virtual std::string engine_type() = 0;
 };
 
-struct PropEngine {
+struct PropEngine : public Powerplant{
 
-	PropEngine() {
+	PropEngine() : Powerplant(){
 
 	}
 
@@ -77,20 +92,46 @@ struct PropEngine {
 	float a = 1.83f;
 	float b = -1.32f;
 	float max_rpm = 2400.f;
-	float calcPower(float velocity, float throttle) {
-		return throttle*(engine_power() / (RPS()*diameter))*(a + (b*(glm::pow(velocity, 2) / (glm::pow(RPS(), 2)*glm::pow(diameter, 2)))));
+	const float C = glm::pow(0.12f,2);
+
+	float calcPower(float throttle) {
+		return throttle*((altitude_dropoff() * engine_power()) / (RPS()*diameter))*(a + (b*(glm::pow(velocity, 2) / (glm::pow(RPS(), 2)*glm::pow(diameter, 2)))));
 	}
-	float efficency(float advance_ratio) { //Np
-		return (a * advance_ratio) + (b * glm::pow(advance_ratio, 3));
-	}
-	float engine_power() { //Pe
+	float engine_power() { // Pe
 		return horse_power * 745.7f;
 	}
-	float RPS() { //n
+	float RPS() { // n
 		return max_rpm/60;
 	}
-	float advance_ratio(float velocity) { //J
-		return velocity / (RPS() * diameter);
+	float pressure() { // p
+		return 101325.f*glm::pow(1 - (0.0065f * (alt / 288.15f)), 5.25f);
+	}
+	float density() { // P
+		return 0.00348f * (pressure() / temp);
+	}
+	float density_ratio() {// P/P0
+		float t = density();
+		float temp = alt;
+		alt = 0;
+		float n = density();
+		alt = temp;
+		return t/n;
+	}
+	float altitude_dropoff() {
+		spec = (density_ratio() - C) / (1 - C);
+		return (density_ratio()-C) / (1-C);
+	}
+
+
+};
+
+struct JetEngine : public Powerplant {
+	JetEngine() : Powerplant() {
+
+	}
+
+	float calcPower(float velocity, float throttle) {
+		return 0.f;
 	}
 };
 
@@ -103,7 +144,7 @@ class Airplane : public Drawable
 
 	std::vector<Fuselage> fuselage_parts;
 	std::vector<Wing> wings;
-	std::vector<PropEngine*> engines;
+	std::vector<Powerplant*> engines;
 
 	std::unordered_map<std::string, std::shared_ptr<Keybind>> keybinds;
 
