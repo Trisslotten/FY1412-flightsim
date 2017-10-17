@@ -30,7 +30,10 @@ void Engine::init()
 
 void Engine::update()
 {
-
+	if (window.keyDown(GLFW_KEY_V))
+	{
+		drawVectors = !drawVectors;
+	}
 	// updates per frame
 	double upf = 1;
 	double framerate = 60.0;
@@ -75,7 +78,8 @@ void Engine::render()
 	renderer.draw(clouds);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
-	renderer.draw(vectors);
+	if(drawVectors)
+		renderer.draw(vectors);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 	renderer.draw(texts);
