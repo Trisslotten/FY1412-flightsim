@@ -118,8 +118,8 @@ struct PropEngine : public Powerplant{
 		return t/n;
 	}
 	float altitude_dropoff() {
-		spec = (density_ratio() - C) / (1 - C);
-		return (density_ratio()-C) / (1-C);
+		spec = clamp((density_ratio() - C) / (1 - C),0.f,1.f);
+		return spec;
 	}
 
 
