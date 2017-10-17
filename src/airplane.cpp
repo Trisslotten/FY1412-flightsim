@@ -107,8 +107,8 @@ void Airplane::buildPlane()
 	wings.emplace_back(wing, r_hori_t, lut, keybinds["elevator"]);
 	wings.emplace_back(wing, vert_t, back_lut);
 
-	body.setMass(800);
-	body.position = dvec3(-600, 1000, 0);
+	body.setMass(900);
+	body.position = dvec3(0, 1000, 0);
 	body.applyImpuls(body.mass * glm::dvec3(60,0,0), body.position);
 
 	engines.push_back(new PropEngine());
@@ -159,8 +159,8 @@ void Airplane::calcLift(Wing & wing)
 			angle_of_attack *= -1;
 
 		double v = length(vel);
-		double Re = density*chord_length*v / dynamic_viscosity;
-		Re = 100000;
+		// L is 0.1 m when calculating
+		double Re = 0.1*density*chord_length*v / dynamic_viscosity;
 		//std::cout << "Re: " << Re << "\n";
 
 		double min_ang = wing.table->minAngle(Re);
@@ -220,7 +220,7 @@ void Airplane::calcDrag()
 	// side length in pixels to draw
 	int resolution = area_resolution;
 	// length of side of cube that surrounds the model in world space
-	double length = 20;
+	double length = 15;
 	double pixel_size = length / resolution;
 	glViewport(0, 0, resolution, resolution);
 
@@ -448,7 +448,7 @@ void Airplane::genInertiaTensor()
 	// side length in pixels to draw
 	const int resolution = 700;
 	// length of side of cube that surrounds the model in world space
-	const double length = 20;
+	const double length = 15;
 	double pixel_size = length / resolution;
 	glViewport(0, 0, resolution, resolution);
 

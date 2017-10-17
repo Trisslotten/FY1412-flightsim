@@ -18,7 +18,6 @@ void Engine::init()
 	camera = std::make_shared<Camera>();
 	renderer.setCamera(camera);
 	terrain.init();
-	terrain.update(glm::vec3());
 
 
 	airplane.init();
@@ -31,7 +30,11 @@ void Engine::init()
 
 void Engine::update()
 {
-	double frame_time = 0.125 / 144.0;
+
+	// updates per frame
+	double upf = 1;
+	double framerate = 60.0;
+	double frame_time = (1.0/upf) / framerate;
 	double timescale = 1;
 	double dt = timer.restart();
 	if(dt < 1)

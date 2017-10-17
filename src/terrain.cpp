@@ -54,8 +54,8 @@ void Terrain::init()
 	lod_distances.push_back(CHUNK_SIZE * 4);
 	lod_distances.push_back(CHUNK_SIZE * 8);
 
-	noise.SetSeed(1337);
-	noise.SetFrequency(0.3);
+	//noise.SetSeed(1337);
+	noise.SetFrequency(0.4);
 	noise.SetFractalOctaves(15);
 	noise.SetFractalType(FastNoise::FractalType::FBM);
 	noise.SetNoiseType(FastNoise::NoiseType::SimplexFractal);
