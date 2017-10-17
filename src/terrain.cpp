@@ -15,7 +15,7 @@ namespace
 
 	float noiseFunc(glm::vec2 pos, FastNoise& noise)
 	{
-		float scale = 2000;
+		float scale = 3000;
 		return scale*noise.GetNoise(pos.x / scale, pos.y / scale) - 500;
 	}
 }
@@ -55,7 +55,7 @@ void Terrain::init()
 	lod_distances.push_back(CHUNK_SIZE * 8);
 
 	noise.SetSeed(1337);
-	noise.SetFrequency(0.1);
+	noise.SetFrequency(0.3);
 	noise.SetFractalOctaves(15);
 	noise.SetFractalType(FastNoise::FractalType::FBM);
 	noise.SetNoiseType(FastNoise::NoiseType::SimplexFractal);

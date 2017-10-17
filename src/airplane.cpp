@@ -54,46 +54,52 @@ void Airplane::buildPlane()
 	std::shared_ptr<Model> wing = std::make_shared<Model>();
 	std::shared_ptr<Model> fuselage = std::make_shared<Model>();
 	wing->load("wing.obj");
-	fuselage->load("cylinder.obj");
+	fuselage->load("cessnafuselage.obj");
 	wing->uploadToGPU();
 	fuselage->uploadToGPU();
 
 
-	std::string NACA2415paths[] = { "NACA 2415 R50.txt", "NACA 2415 R100.txt","NACA 2415 R200.txt" ,"NACA 2415 R500.txt" ,"NACA 2415 R1000.txt" };
-	std::shared_ptr<LookUpTable> lut = std::make_shared<LookUpTable>(NACA2415paths);
+	std::string NACA2412paths[] = { "NACA 2412 R50.txt", "NACA 2412 R100.txt","NACA 2412 R200.txt" ,"NACA 2412 R500.txt" ,"NACA 2412 R1000.txt" };
+	std::shared_ptr<LookUpTable> lut = std::make_shared<LookUpTable>(NACA2412paths);
 	std::string HT12paths[] = { "HT12 R50.txt", "HT12 R100.txt","HT12 R200.txt" ,"HT12 R500.txt" ,"HT12 R1000.txt" };
 	std::shared_ptr<LookUpTable> back_lut = std::make_shared<LookUpTable>(HT12paths);
 
 
-	keybinds["l_aileron"] = std::make_shared<Keybind>(GLFW_KEY_A, GLFW_KEY_D, glm::radians(back_lut->maxAngle(0)));
-	keybinds["r_aileron"] = std::make_shared<Keybind>(GLFW_KEY_D, GLFW_KEY_A, glm::radians(back_lut->maxAngle(0)));
+	keybinds["l_aileron"] = std::make_shared<Keybind>(GLFW_KEY_D, GLFW_KEY_A, glm::radians(-0.9*lut->minAngle(0)));
+	keybinds["r_aileron"] = std::make_shared<Keybind>(GLFW_KEY_A, GLFW_KEY_D, glm::radians(-0.9*lut->minAngle(0)));
 
-	keybinds["elevator"] = std::make_shared<Keybind>(GLFW_KEY_S, GLFW_KEY_W, glm::radians(lut->maxAngle(0)));
+	keybinds["elevator"] = std::make_shared<Keybind>(GLFW_KEY_S, GLFW_KEY_W, glm::radians(0.9*lut->maxAngle(0)));
 
-	dmat4 fuselage_t = scale(dvec3(8, 1, 1));
+	dmat4 fuselage_t;// = scale(dvec3(8, 1, 1));
 
-	WingTransform l_wing_t(translate(dvec3(-3, 0, -4))*rotate(0.0, dvec3(1, 0, 0)),
-						   scale(dvec3(1, 1, 4)));
-	WingTransform r_wing_t(translate(dvec3(-3, 0, 4))*rotate(-0.0, dvec3(1, 0, 0)),
-						   scale(dvec3(1, 1, 4)));
+	// wing is 2 by 2 meters with 0,0,0 in center
+	//WingTransform l_wing_t(translate(dvec3(-0.4, 1, 2.75))*rotate(0.0, dvec3(1, 0, 0)),
+	//					   scale(dvec3(0.73636363636, 1, 2.75)));
+	//WingTransform r_wing_t(translate(dvec3(-0.4, 1, -2.75))*rotate(-0.0, dvec3(1, 0, 0)),
+	//					   scale(dvec3(0.73636363636, 1, 2.75)));
 
-	WingTransform l_aileron_t(translate(dvec3(-4.2, 0, -6))*rotate(0.0, dvec3(1, 0, 0)),
-							  scale(dvec3(0.2, 0.1, 2)));
-	WingTransform r_aileron_t(translate(dvec3(-4.2, 0, 6))*rotate(0.0, dvec3(1, 0, 0)),
-							  scale(dvec3(0.2, 0.1, 2)));
+	WingTransform wing_t(translate(dvec3(-0.4, 1, 0))*rotate(-0.0, dvec3(1, 0, 0)),
+						   scale(dvec3(0.73636363636, 1, 5.5)));
+
+	WingTransform l_aileron_t(translate(dvec3(-1.3, 1, 4))*rotate(0.0, dvec3(1, 0, 0)),
+							  scale(dvec3(0.15, 0.15, 1.5)));
+	WingTransform r_aileron_t(translate(dvec3(-1.3, 1, -4))*rotate(0.0, dvec3(1, 0, 0)),
+							  scale(dvec3(0.15, 0.15, 1.5)));
 
 
-	WingTransform l_hori_t(translate(dvec3(-7, 1, -2)),
-						   scale(dvec3(1, 1, 2)));
-	WingTransform r_hori_t(translate(dvec3(-7, 1, 2)),
-						   scale(dvec3(1, 1, 2)));
-	WingTransform vert_t(translate(dvec3(-7, 3, 0))*rotate(half_pi<double>(), dvec3(1, 0, 0)),
-						 scale(dvec3(1, 1, 2)));
+	WingTransform l_hori_t(translate(dvec3(-6.3, 0.5, 0.8625)),
+						   scale(dvec3(0.5, 0.8625, 0.8625)));
+	WingTransform r_hori_t(translate(dvec3(-6.3, 0.5, -0.8625)),
+						   scale(dvec3(0.5, 0.8625, 0.8625)));
+	WingTransform vert_t(translate(dvec3(-6.3,1,0))*rotate(half_pi<double>(), dvec3(1, 0, 0)),
+						 scale(dvec3(0.5, 0.5, 0.7)));
 
 	fuselage_parts.emplace_back(fuselage, fuselage_t);
 
-	wings.emplace_back(wing, l_wing_t, lut);
-	wings.emplace_back(wing, r_wing_t, lut);
+	//wings.emplace_back(wing, l_wing_t, lut);
+	//wings.emplace_back(wing, r_wing_t, lut);
+	wings.emplace_back(wing, wing_t, lut);
+
 	wings.emplace_back(wing, l_aileron_t, lut, keybinds["l_aileron"]);
 	wings.emplace_back(wing, r_aileron_t, lut, keybinds["r_aileron"]);
 
@@ -101,7 +107,7 @@ void Airplane::buildPlane()
 	wings.emplace_back(wing, r_hori_t, lut, keybinds["elevator"]);
 	wings.emplace_back(wing, vert_t, back_lut);
 
-	body.setMass(5000);
+	body.setMass(800);
 	body.position = dvec3(-600, 1000, 0);
 
 	engines.push_back(new PropEngine());
@@ -176,6 +182,8 @@ void Airplane::calcLift(Wing & wing)
 
 
 			double drag = 0.5*density*v*v*area*data.cd;
+
+			drag += 2 * lift*lift / (density*v*v*wing_length*wing_length*pi<double>());
 
 			dvec3 center_of_pressure = wing_pos + dvec3(body.getTransform()*dvec4(0.5*half_wing_chord, 0));
 
@@ -330,14 +338,14 @@ void Airplane::update(double dt, Engine& engine)
 		//std::cout << "Pitch: " << axis[1] << std::endl;
 		//std::cout << "Turn: " << axis[2] << std::endl;
 
-		throttle = 1.f-((axis[3] + 1.f)/2);
+		throttle = 1.f-((axis[2] + 1.f)/2);
 
 		//std::cout << "Throttle: " << throttle << std::endl;
 		//std::cout << "axis[2]: " << axis[2] << std::endl;
 
 		if (abs(axis[0]) > 0.1f) {
-			keybinds["l_aileron"]->set(sign(axis[0]) * axis[0]* axis[0]);
-			keybinds["r_aileron"]->set(-sign(axis[0]) * axis[0] * axis[0]);
+			keybinds["l_aileron"]->set(-sign(axis[0]) * axis[0]* axis[0]);
+			keybinds["r_aileron"]->set(sign(axis[0]) * axis[0] * axis[0]);
 		}
 		if (abs(axis[1]) > 0.1f) {
 			keybinds["elevator"]->set(-sign(axis[1]) * axis[1] * axis[1]);

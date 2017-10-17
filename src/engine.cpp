@@ -26,12 +26,12 @@ void Engine::init()
 	renderer.init(&window);
 	
 	clouds.init();
-	renderer.setNearFarPlane(10, 50000);
+	renderer.setNearFarPlane(1, 50000);
 }
 
 void Engine::update()
 {
-	double frame_time = 0.25 / 144.0;
+	double frame_time = 0.125 / 144.0;
 	double timescale = 1;
 	double dt = timer.restart();
 	if(dt < 1)
@@ -64,6 +64,7 @@ void Engine::render()
 	renderer.initDrawing(window);
 
 	renderer.draw(airplane);
+
 	renderer.draw(terrain);
 
 	renderer.drawSkybox();
