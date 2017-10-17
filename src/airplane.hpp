@@ -140,7 +140,11 @@ class Airplane : public Drawable
 {
 	ShaderProgram shader;
 	GLuint* depth_map;
+	dvec3 drag_center;
+	double reference_area;
+	Timer drag_timer;
 	int area_resolution = 20;
+
 
 	std::vector<Fuselage> fuselage_parts;
 	std::vector<Wing> wings;

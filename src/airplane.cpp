@@ -243,15 +243,23 @@ void Airplane::calcDrag()
 	shader.uniform("projection", projection);
 	shader.uniform("view", view);
 
-	glClear(GL_DEPTH_BUFFER_BIT);
-	for (auto&& part : fuselage_parts)
-		recursiveDraw(part.model->getRootNode(), mat4(body_transform * part.transform), shader);
-	for (auto&& wing : wings)
+
+	double drag_freq = 15;
+	if (drag_timer.elapsed() > 1 / drag_freq)
 	{
-		if (wing.stalling)
-			recursiveDraw(wing.model->getRootNode(), mat4(body_transform * wing.transform), shader);
+		drag_timer.restart();
+		glClear(GL_DEPTH_BUFFER_BIT);
+		for (auto&& part : fuselage_parts)
+			recursiveDraw(part.model->getRootNode(), mat4(body_transform * part.transform), shader);
+		for (auto&& wing : wings)
+		{
+			if (wing.stalling)
+				recursiveDraw(wing.model->getRootNode(), mat4(body_transform * wing.transform), shader);
+		}
+		glReadPixels(0, 0, resolution, resolution, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, depth_map);
 	}
-	glReadPixels(0, 0, resolution, resolution, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, depth_map);
+	
+	
 
 	double area = pixel_size*pixel_size;
 
@@ -295,7 +303,7 @@ void Airplane::calcDrag()
 		}
 	}
 	/**/
-	dvec3 drag_center = body.position;
+	//drag_center = body.position;
 	double reference_area = pixel_size*pixel_size*num_pixels;
 	if (num_pixels > 0)
 	{
