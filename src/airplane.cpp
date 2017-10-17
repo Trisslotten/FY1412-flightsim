@@ -87,9 +87,9 @@ void Airplane::buildPlane()
 							  scale(dvec3(0.15, 0.15, 1.5)));
 
 
-	WingTransform l_hori_t(translate(dvec3(-6.3, 0.5, 0.8625)),
+	WingTransform l_hori_t(translate(dvec3(-6.3, 0.5, 0.8625))*rotate(-0.02, dvec3(0, 0, 1)),
 						   scale(dvec3(0.5, 0.8625, 0.8625)));
-	WingTransform r_hori_t(translate(dvec3(-6.3, 0.5, -0.8625)),
+	WingTransform r_hori_t(translate(dvec3(-6.3, 0.5, -0.8625))*rotate(-0.02, dvec3(0, 0, 1)),
 						   scale(dvec3(0.5, 0.8625, 0.8625)));
 	WingTransform vert_t(translate(dvec3(-6.3,1,0))*rotate(half_pi<double>(), dvec3(1, 0, 0)),
 						 scale(dvec3(0.5, 0.5, 0.7)));
@@ -109,6 +109,7 @@ void Airplane::buildPlane()
 
 	body.setMass(800);
 	body.position = dvec3(-600, 1000, 0);
+	body.applyImpuls(body.mass * glm::dvec3(60,0,0), body.position);
 
 	engines.push_back(new PropEngine());
 }
@@ -328,7 +329,7 @@ void Airplane::update(double dt, Engine& engine)
 
 	Window& w = engine.getWindow();
 	for (auto&& map_elem : keybinds)
-		map_elem.second->update(w);
+		map_elem.second->update(dt, w);
 
 
 	if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
@@ -338,7 +339,7 @@ void Airplane::update(double dt, Engine& engine)
 		//std::cout << "Pitch: " << axis[1] << std::endl;
 		//std::cout << "Turn: " << axis[2] << std::endl;
 
-		throttle = 1.f-((axis[3] + 1.f)/2);
+		throttle = 1.f-((axis[2] + 1.f)/2);
 
 		//std::cout << "Throttle: " << throttle << std::endl;
 		//std::cout << "axis[2]: " << axis[2] << std::endl;

@@ -16,7 +16,7 @@ public:
 
 	Keybind(int key1, int key2, double change);
 
-	void update(Window& window);
+	void update(double dt, Window& window);
 
 	void set(double val)
 	{

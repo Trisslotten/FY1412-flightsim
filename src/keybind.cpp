@@ -9,9 +9,9 @@ Keybind::Keybind(int _key1, int _key2, double _change)
 	change = _change;
 }
 
-void Keybind::update(Window & w)
+void Keybind::update(double dt, Window & w)
 {
-	double ratio = 0.01;
+	double ratio = 2 * dt;
 	bool pressed = false;
 	if (w.keyDown(key1))
 	{
