@@ -95,7 +95,7 @@ struct PropEngine : public Powerplant{
 	const float C = glm::pow(0.12f,2);
 
 	float calcPower(float throttle) {
-		return throttle*((altitude_dropoff() * engine_power()) / (RPS()*diameter))*(a + (b*(glm::pow(velocity, 2) / (glm::pow(RPS(), 2)*glm::pow(diameter, 2)))));
+		return clamp(throttle*((altitude_dropoff() * engine_power()) / (RPS()*diameter))*(a + (b*(glm::pow(velocity, 2) / (glm::pow(RPS(), 2)*glm::pow(diameter, 2))))), 0.f, 100000.f);
 	}
 	float engine_power() { // Pe
 		return horse_power * 745.7f;
@@ -118,8 +118,8 @@ struct PropEngine : public Powerplant{
 		return t/n;
 	}
 	float altitude_dropoff() {
-		spec = (density_ratio() - C) / (1 - C);
-		return (density_ratio()-C) / (1-C);
+		spec = clamp((density_ratio() - C) / (1 - C),0.f,1.f);
+		return spec;
 	}
 
 

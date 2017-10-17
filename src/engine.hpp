@@ -29,6 +29,8 @@ class Engine
 	Timer global_time;
 	Timer timer;
 	float frame_accum;
+
+	bool drawVectors = true;
 	
 public:
 	Texts& getTexts() { return texts; }
